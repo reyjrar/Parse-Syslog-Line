@@ -1,0 +1,10 @@
+*.bak
+.svn
+inc
+blib
+Parse-Syslog-Line-*
+MANIFEST
+Makefile
+Makefile.old
+.cvsignore
+pm_to_blib

@@ -1,0 +1,17 @@
+--- #YAML:1.0
+name:                Parse-Syslog-Line
+version:             0.3
+abstract:            Parses Syslog Lines into Hashes
+license:             ~
+generated_by:        ExtUtils::MakeMaker version 6.31
+distribution_type:   module
+requires:     
+    DateTime:                      0
+    DateTime::Format::HTTP:        0
+    Readonly:                      0
+    Test::More:                    0
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
+    version: 1.2
+author:
+    - Brad Lhotsky <brad@divisionbyzero.net>

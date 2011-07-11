@@ -5,7 +5,7 @@ messages into hashes of exhaustive information.  Sample code:
 
 	use Parse::Syslog::Line;
 
-	my $href = syslog_parse_line( $msg );
+	my $href = parse_syslog_line( $msg );
 
 	...
 

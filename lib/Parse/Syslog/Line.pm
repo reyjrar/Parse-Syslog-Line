@@ -26,9 +26,9 @@ I wanted a very simple log parser for network based syslog input.
 Nothing existed that simply took a line and returned a hash ref all
 parsed out.
 
-    use Parse::Syslog::Line qw(syslog_parse_line);
+    use Parse::Syslog::Line qw(parse_syslog_line);
 
-    my $href = syslog_parse_line( $msg );
+    my $href = parse_syslog_line( $msg );
 	#
 	# $href = {
 	#		preamble		=> '13',	

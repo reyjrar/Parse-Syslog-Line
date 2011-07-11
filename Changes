@@ -1,5 +1,8 @@
 Revision history for Parse-Syslog-Line
 
+0.6		Jul 11 2011 - Brad Lhotsky <brad@divisionbyzero.net>
+		- Fixed Documentation
+
 0.5		Jul 08 2011 - Brad Lhotsky <brad@divisionbyzero.net>
 		- Added to https://github.com/reyjrar/Parse-Syslog-Line
 		- Added to PAUSE

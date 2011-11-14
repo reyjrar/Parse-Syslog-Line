@@ -14,11 +14,11 @@ Parse::Syslog::Line - Parses Syslog Lines into Hashes
 
 =head1 VERSION
 
-Version 0.5
+Version 0.7
 
 =cut
 
-our $VERSION = '0.6';
+our $VERSION = '0.7';
 
 =head1 SYNOPSIS
 
@@ -119,17 +119,16 @@ Readonly our %CONV_MASK => (
 =head1 EXPORT
 
 Exported by default:
-	parse_syslog_line( $one_line_of_syslog_message );
+       parse_syslog_line( $one_line_of_syslog_message );
 
 Optional Exports:
   :preamble
-	preamble_priority
-	preamble_facility
+       preamble_priority
+       preamble_facility
 
   :constants
-	%LOG_FACILITY
-	%LOG_PRIORITY
-
+       %LOG_FACILITY
+       %LOG_PRIORITY
 =cut
 
 our @ISA = qw(Exporter);
@@ -144,11 +143,17 @@ our @EXPORT_TAGS = (
 	preamble		=> [ qw(preamble_priority preamble_facility) ],
 );
 
+# Regex to Support Matches
+Readonly my %RE => (
+	IPv4	=> qr/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/,
+);
+
+# Regex to Extract Data
 Readonly my %REGEXP => (
 	preamble		=> qr/^\<(\d+)\>/,
 	date			=> qr/(\w{3}\s+\d+\s+\d+(\:\d+){1,2})/,
 	host			=> qr/\d+(?:\:\d+){1,2}\s+(\S+)/,
-	program_raw		=> qr/\d+(?:\:\d+){1,2}\s+\S+\s+([^:\s]+)(:|\s)/,
+	program_raw		=> qr/\d+(?:\:\d+){1,2}\s+\S+\s+([^:]+):/,
 	program_name	=> qr/^([^\[\(]+)/,
 	program_sub		=> qr/\S+\(([^\)]+)\)/,
 	program_pid		=> qr/\S+\[([^\]]+)\]/,
@@ -165,7 +170,7 @@ Returns a hash reference of syslog message parsed data.
 =cut
 
 sub parse_syslog_line {
-	my $raw_string = shift;
+	my ($raw_string) = @_;
 
 	my %msg = (
 		'message_raw'	=> $raw_string,
@@ -213,7 +218,13 @@ sub parse_syslog_line {
 	#
 	# Host Information:
 	my ($hostStr) = ($raw_string =~ /$REGEXP{host}/);
-	if( defined $hostStr ) {
+	my($ip) = ($hostStr =~ /($RE{IPv4})/);
+	if( defined $ip && length $ip ) {
+		$msg{host_raw} = $hostStr;
+		$msg{host} = $ip;
+		$msg{domain} = undef;
+	}
+	elsif( length $hostStr ) {
 		my ($host,$domain) = split /\./, $hostStr, 2;
 		$msg{host_raw} = $hostStr;
 		$msg{host} = $host;

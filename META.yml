@@ -14,8 +14,6 @@ requires:
     DateTime:             0
     DateTime::Format::HTTP:  0
     Readonly:             0
-    Regexp::Common:       0
-    Regexp::Common::net:  0
     Test::More:           0
 no_index:
     directory:

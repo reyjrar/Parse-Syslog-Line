@@ -10,7 +10,5 @@ test_requires	'Test::More'				=> 0;
 requires		'Readonly'					=> 0;
 requires		'DateTime'					=> 0;
 requires		'DateTime::Format::HTTP'	=> 0;
-requires		'Regexp::Common'			=> 0;
-requires		'Regexp::Common::net'		=> 0;
 
 WriteAll();

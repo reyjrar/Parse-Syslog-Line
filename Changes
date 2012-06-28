@@ -1,5 +1,8 @@
 Revision history for Parse-Syslog-Line
 
+0.8		Jun 28 2012 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Moved to Dist::Zilla
+
 0.7		Nov 14 2011 - Brad Lhotsky <brad@divisionbyzero.net>
 		- Tests added for IP as Hostname Bug
 		- Fixed "IP as Hostname" Bug

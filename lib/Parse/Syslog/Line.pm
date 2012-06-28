@@ -1,3 +1,5 @@
+# ABSTRACT: Simple syslog line parser
+
 package Parse::Syslog::Line;
 
 use warnings;
@@ -14,11 +16,11 @@ Parse::Syslog::Line - Parses Syslog Lines into Hashes
 
 =head1 VERSION
 
-Version 0.7
+Version 0.8
 
 =cut
 
-our $VERSION = '0.7';
+our $VERSION = '0.8';
 
 =head1 SYNOPSIS
 
@@ -31,9 +33,9 @@ parsed out.
     my $href = parse_syslog_line( $msg );
 	#
 	# $href = {
-	#		preamble		=> '13',	
-	#		priority		=> 'notice',	
-	#		priority_int	=> 5,	
+	#		preamble		=> '13',
+	#		priority		=> 'notice',
+	#		priority_int	=> 5,
 	#		facility		=> 'user',
 	#		facility_int	=> 8,
 	#		date			=> 'YYYY-MM-DD',
@@ -139,7 +141,7 @@ our @EXPORT_OK = qw(
 	%LOG_FACILITY %LOG_PRIORITY
 );
 our @EXPORT_TAGS = (
-	constants		=> [ qw( %LOG_FACILITY %LOG_PRIORITY ) ],	
+	constants		=> [ qw( %LOG_FACILITY %LOG_PRIORITY ) ],
 	preamble		=> [ qw(preamble_priority preamble_facility) ],
 );
 
@@ -190,7 +192,7 @@ sub parse_syslog_line {
 
 		@msg{qw(priority priority_int)} = @{ $priority }{qw(as_text as_int)};
 		@msg{qw(facility facility_int)} = @{ $facility }{qw(as_text as_int)};
-		
+
 	}
 	else {
 		foreach my $var (qw(preamble priority priority_int facility facility_int)) {
@@ -235,7 +237,7 @@ sub parse_syslog_line {
 			$msg{$var} = undef;
 		}
 	}
-	
+
 	#
 	# Parse the Program portion
 	my ($progStr) = ($raw_string =~ /$REGEXP{program_raw}/);
@@ -244,7 +246,7 @@ sub parse_syslog_line {
 		foreach my $var (qw(program_name program_pid program_sub)) {
 			($msg{$var}) = ($progStr =~ /$REGEXP{$var}/);
 		}
-	}	
+	}
 	else {
 		foreach my $var (qw(program_raw program_name program_pid program_sub)) {
 			$msg{$var} = undef;
@@ -261,7 +263,7 @@ sub parse_syslog_line {
 	return \%msg;
 }
 
-=head2 preamble_priority 
+=head2 preamble_priority
 
 Takes the Integer portion of the syslog messsage and returns
 a hash reference as such:
@@ -285,11 +287,11 @@ sub preamble_priority {
 
 	$hash{as_int} = $preamble & $CONV_MASK{priority};
 	$hash{as_text} = $LOG_PRIORITY{ $hash{as_int} };
-	
+
 	return \%hash;
 }
 
-=head2 preamble_facility 
+=head2 preamble_facility
 
 Takes the Integer portion of the syslog messsage and returns
 a hash reference as such:
@@ -313,7 +315,7 @@ sub preamble_facility {
 
 	$hash{as_int} = $preamble & $CONV_MASK{facility};
 	$hash{as_text} = $LOG_FACILITY{ $hash{as_int} };
-	
+
 	return \%hash;
 
 }

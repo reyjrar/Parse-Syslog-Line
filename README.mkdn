@@ -1,0 +1,152 @@
+# NAME
+
+Parse::Syslog::Line - Simple syslog line parser
+
+# VERSION
+
+version 0.8
+
+# SYNOPSIS
+
+I wanted a very simple log parser for network based syslog input.
+Nothing existed that simply took a line and returned a hash ref all
+parsed out.
+
+    use Parse::Syslog::Line qw(parse_syslog_line);
+
+    my $href = parse_syslog_line( $msg );
+	#
+	# $href = {
+	#		preamble		=> '13',
+	#		priority		=> 'notice',
+	#		priority_int	=> 5,
+	#		facility		=> 'user',
+	#		facility_int	=> 8,
+	#		date			=> 'YYYY-MM-DD',
+	#		time			=> 'HH::MM:SS',
+	#		datetime_str	=> 'YYYY-MM-DD HH:MM:SS',
+	#		datetime_obj	=> new DateTime(), # If installed
+	#		datetime_raw	=> 'Feb 17 11:12:13'
+	#		host_raw		=> 'hostname',  # Hostname as it appeared in the message
+	#		host		 	=> 'hostname',  # Hostname without domain
+	#		domain			=> 'blah.com',  # if provided
+	#		program_raw		=> 'sshd(blah)[pid]',
+	#		program_name	=> 'sshd',
+	#		program_sub		=> 'pam_unix',
+	#		program_pid		=> 20345,
+	#		content			=> 'the rest of the message'
+	#		message			=> 'program[pid]: the rest of the message',
+	#		message_raw		=> 'The message as it was passed',
+	# };
+    ...
+
+# NAME
+
+Parse::Syslog::Line - Parses Syslog Lines into Hashes
+
+# VERSION
+
+Version 0.8
+
+# EXPORT
+
+Exported by default:
+       parse\_syslog\_line( $one\_line\_of\_syslog\_message );
+
+Optional Exports:
+  :preamble
+       preamble\_priority
+       preamble\_facility
+
+    :constants
+         %LOG_FACILITY
+         %LOG_PRIORITY
+
+# FUNCTIONS
+
+## parse\_syslog\_line
+
+Returns a hash reference of syslog message parsed data.
+
+## preamble\_priority
+
+Takes the Integer portion of the syslog messsage and returns
+a hash reference as such:
+
+	$prioRef = {
+		'preamble'	=> 13
+		'as_text'	=> 'notice',
+		'as_int' 	=> 5,
+	};
+
+## preamble\_facility
+
+Takes the Integer portion of the syslog messsage and returns
+a hash reference as such:
+
+	$facRef = {
+		'preamble'	=> 13
+		'as_text'	=> 'user',
+		'as_int' 	=> 8,
+	};
+
+# AUTHOR
+
+Brad Lhotsky, `<brad at divisionbyzero.net>`
+
+# BUGS
+
+Please report any bugs or feature requests to
+`bug-parse-syslog-line at rt.cpan.org`, or through the web interface at
+[http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Parse-Syslog-Line](http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Parse-Syslog-Line).
+I will be notified, and then you'll automatically be notified of progress on
+your bug as I make changes.
+
+# SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc Parse::Syslog::Line
+
+You can also look for information at:
+
+- Github Page
+
+[http://github.com/reyjrar/Parse-Syslog-Line](http://github.com/reyjrar/Parse-Syslog-Line)
+
+- AnnoCPAN: Annotated CPAN documentation
+
+[http://annocpan.org/dist/Parse-Syslog-Line](http://annocpan.org/dist/Parse-Syslog-Line)
+
+- CPAN Ratings
+
+[http://cpanratings.perl.org/d/Parse-Syslog-Line](http://cpanratings.perl.org/d/Parse-Syslog-Line)
+
+- RT: CPAN's request tracker
+
+[http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line](http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line)
+
+- Search CPAN
+
+[http://search.cpan.org/dist/Parse-Syslog-Line](http://search.cpan.org/dist/Parse-Syslog-Line)
+
+# ACKNOWLEDGEMENTS
+
+# COPYRIGHT & LICENSE
+
+Copyright 2007 Brad Lhotsky, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+# AUTHOR
+
+Brad Lhotsky <brad@divisionbyzero.net>
+
+# COPYRIGHT AND LICENSE
+
+This software is Copyright (c) 2012 by Brad Lhotsky.
+
+This is free software, licensed under:
+
+    The (three-clause) BSD License

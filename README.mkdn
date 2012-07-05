@@ -15,29 +15,29 @@ parsed out.
     use Parse::Syslog::Line qw(parse_syslog_line);
 
     my $href = parse_syslog_line( $msg );
-	#
-	# $href = {
-	#		preamble		=> '13',
-	#		priority		=> 'notice',
-	#		priority_int	=> 5,
-	#		facility		=> 'user',
-	#		facility_int	=> 8,
-	#		date			=> 'YYYY-MM-DD',
-	#		time			=> 'HH::MM:SS',
-	#		datetime_str	=> 'YYYY-MM-DD HH:MM:SS',
-	#		datetime_obj	=> new DateTime(), # If installed
-	#		datetime_raw	=> 'Feb 17 11:12:13'
-	#		host_raw		=> 'hostname',  # Hostname as it appeared in the message
-	#		host		 	=> 'hostname',  # Hostname without domain
-	#		domain			=> 'blah.com',  # if provided
-	#		program_raw		=> 'sshd(blah)[pid]',
-	#		program_name	=> 'sshd',
-	#		program_sub		=> 'pam_unix',
-	#		program_pid		=> 20345,
-	#		content			=> 'the rest of the message'
-	#		message			=> 'program[pid]: the rest of the message',
-	#		message_raw		=> 'The message as it was passed',
-	# };
+    #
+    # $href = {
+    #       preamble        => '13',
+    #       priority        => 'notice',
+    #       priority_int    => 5,
+    #       facility        => 'user',
+    #       facility_int    => 8,
+    #       date            => 'YYYY-MM-DD',
+    #       time            => 'HH::MM:SS',
+    #       datetime_str    => 'YYYY-MM-DD HH:MM:SS',
+    #       datetime_obj    => new DateTime(), # If installed
+    #       datetime_raw    => 'Feb 17 11:12:13'
+    #       host_raw        => 'hostname',  # Hostname as it appeared in the message
+    #       host            => 'hostname',  # Hostname without domain
+    #       domain          => 'blah.com',  # if provided
+    #       program_raw     => 'sshd(blah)[pid]',
+    #       program_name    => 'sshd',
+    #       program_sub     => 'pam_unix',
+    #       program_pid     => 20345,
+    #       content         => 'the rest of the message'
+    #       message         => 'program[pid]: the rest of the message',
+    #       message_raw     => 'The message as it was passed',
+    # };
     ...
 
 # NAME
@@ -73,22 +73,22 @@ Returns a hash reference of syslog message parsed data.
 Takes the Integer portion of the syslog messsage and returns
 a hash reference as such:
 
-	$prioRef = {
-		'preamble'	=> 13
-		'as_text'	=> 'notice',
-		'as_int' 	=> 5,
-	};
+    $prioRef = {
+        'preamble'  => 13
+        'as_text'   => 'notice',
+        'as_int'    => 5,
+    };
 
 ## preamble\_facility
 
 Takes the Integer portion of the syslog messsage and returns
 a hash reference as such:
 
-	$facRef = {
-		'preamble'	=> 13
-		'as_text'	=> 'user',
-		'as_int' 	=> 8,
-	};
+    $facRef = {
+        'preamble'  => 13
+        'as_text'   => 'user',
+        'as_int'    => 8,
+    };
 
 # AUTHOR
 

@@ -16,11 +16,11 @@ Parse::Syslog::Line - Parses Syslog Lines into Hashes
 
 =head1 VERSION
 
-Version 0.8
+Version 0.9
 
 =cut
 
-our $VERSION = '0.8';
+our $VERSION = '0.9';
 our $DateTimeCreate = 1;
 
 =head1 SYNOPSIS
@@ -30,6 +30,8 @@ Nothing existed that simply took a line and returned a hash ref all
 parsed out.
 
     use Parse::Syslog::Line qw(parse_syslog_line);
+
+    $Parse::Syslog::Line::DateTimeCreate = 1;
 
     my $href = parse_syslog_line( $msg );
     #
@@ -154,15 +156,26 @@ Readonly my %RE => (
 # Regex to Extract Data
 Readonly my %REGEXP => (
     preamble        => qr/^\<(\d+)\>/,
-    date            => qr/(\w{3}\s+\d+\s+\d+(\:\d+){1,2})/,
-    host            => qr/\d+(?:\:\d+){1,2}\s+(\S+)/,
-    program_raw     => qr/\d+(?:\:\d+){1,2}\s+\S+\s+([^:]+):/,
+    date            => qr/^(\w{3}\s+\d+\s+\d+(\:\d+){1,2})/,
+    host            => qr/^\s*(\S+)/,
+    program_raw     => qr/^\s*(\S+):/,
     program_name    => qr/^([^\[\(]+)/,
     program_sub     => qr/\S+\(([^\)]+)\)/,
     program_pid     => qr/\S+\[([^\]]+)\]/,
-    content         => qr/\d+(?:\:\d+){1,2}\s+\S+\s+[^:]+:\s+(.*)/,
-    message         => qr/\d+(?:\:\d+){1,2}\s+\S+\s+([^:]+:\s+.*)/,
+    content         => qr/\s+(.*)/,
 );
+
+=head1 VARIABLES
+
+=head2 DateTimeCreate
+
+If this variable is set to 1 (the default), a DateTime object will be
+returned in the $m->{datetime_obj} field.  Otherwise, this will be skipped.
+
+Usage:
+
+  our $Parse::Syslog::Line::DateTimeCreate = 0;
+
 
 =head1 FUNCTIONS
 
@@ -221,18 +234,20 @@ sub parse_syslog_line {
 
     #
     # Host Information:
-    my ($hostStr) = ($raw_string =~ /$REGEXP{host}/);
-    my($ip) = ($hostStr =~ /($RE{IPv4})/);
-    if( defined $ip && length $ip ) {
-        $msg{host_raw} = $hostStr;
-        $msg{host} = $ip;
-        $msg{domain} = undef;
-    }
-    elsif( length $hostStr ) {
-        my ($host,$domain) = split /\./, $hostStr, 2;
-        $msg{host_raw} = $hostStr;
-        $msg{host} = $host;
-        $msg{domain} = $domain;
+    if( $raw_string =~ s/$REGEXP{host}// ) {
+        my $hostStr = $1;
+        my($ip) = ($hostStr =~ /($RE{IPv4})/);
+        if( defined $ip && length $ip ) {
+            $msg{host_raw} = $hostStr;
+            $msg{host} = $ip;
+            $msg{domain} = undef;
+        }
+        elsif( length $hostStr ) {
+            my ($host,$domain) = split /\./, $hostStr, 2;
+            $msg{host_raw} = $hostStr;
+            $msg{host} = $host;
+            $msg{domain} = $domain;
+        }
     }
     else {
         foreach my $var (qw(host host_raw domain)) {
@@ -242,11 +257,13 @@ sub parse_syslog_line {
 
     #
     # Parse the Program portion
-    my ($progStr) = ($raw_string =~ /$REGEXP{program_raw}/);
-    if( defined $progStr ) {
-        $msg{program_raw} = $progStr;
-        foreach my $var (qw(program_name program_pid program_sub)) {
-            ($msg{$var}) = ($progStr =~ /$REGEXP{$var}/);
+    if( $raw_string =~ s/$REGEXP{program_raw}// ) {
+        my $progStr = $1;
+        if( defined $progStr ) {
+            $msg{program_raw} = $progStr;
+            foreach my $var (qw(program_name program_pid program_sub)) {
+                ($msg{$var}) = ($progStr =~ /$REGEXP{$var}/);
+            }
         }
     }
     else {
@@ -255,10 +272,10 @@ sub parse_syslog_line {
         }
     }
 
-    foreach my $var (qw(content message)) {
+    foreach my $var (qw(content)) {
         ($msg{$var}) = ($raw_string =~ /$REGEXP{$var}/);
     }
-
+    $msg{message} = "$msg{program_raw}: $msg{content}";
 
     #
     # Return our hash reference!

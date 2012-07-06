@@ -1,5 +1,10 @@
 Revision history for Parse-Syslog-Line
 
+0.9		Jul  6 2012 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Faster parsing method enabled
+        - Tested a number of DateTime::Format::* modules, HTTP
+          tested the fastest.
+
 0.8		Jun 28 2012 - Brad Lhotsky <brad@divisionbyzero.net>
         - Moved to Dist::Zilla
 

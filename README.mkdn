@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 0.8
+version 0.9
 
 # SYNOPSIS
 
@@ -13,6 +13,8 @@ Nothing existed that simply took a line and returned a hash ref all
 parsed out.
 
     use Parse::Syslog::Line qw(parse_syslog_line);
+
+    $Parse::Syslog::Line::DateTimeCreate = 1;
 
     my $href = parse_syslog_line( $msg );
     #
@@ -46,7 +48,7 @@ Parse::Syslog::Line - Parses Syslog Lines into Hashes
 
 # VERSION
 
-Version 0.8
+Version 0.9
 
 # EXPORT
 
@@ -61,6 +63,17 @@ Optional Exports:
     :constants
          %LOG_FACILITY
          %LOG_PRIORITY
+
+# VARIABLES
+
+## DateTimeCreate
+
+If this variable is set to 1 (the default), a DateTime object will be
+returned in the $m->{datetime\_obj} field.  Otherwise, this will be skipped.
+
+Usage:
+
+    our $Parse::Syslog::Line::DateTimeCreate = 0;
 
 # FUNCTIONS
 

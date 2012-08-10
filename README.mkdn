@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 0.9
+version 1.0
 
 # SYNOPSIS
 
@@ -48,7 +48,7 @@ Parse::Syslog::Line - Parses Syslog Lines into Hashes
 
 # VERSION
 
-Version 0.9
+Version 1.0
 
 # EXPORT
 

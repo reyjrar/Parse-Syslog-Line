@@ -16,11 +16,11 @@ Parse::Syslog::Line - Parses Syslog Lines into Hashes
 
 =head1 VERSION
 
-Version 0.9
+Version 1.0
 
 =cut
 
-our $VERSION = '0.9';
+our $VERSION = '1.0';
 our $DateTimeCreate = 1;
 
 =head1 SYNOPSIS

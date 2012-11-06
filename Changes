@@ -1,4 +1,8 @@
 Revision history for Parse-Syslog-Line
+1.1		Nov 06 2012 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Handle content and message entries a bit more
+          intelligently.
+
 1.0		Aug 10 2012 - Brad Lhotsky <brad@divisionbyzero.net>
         - Removed taint checking from tests as DateTime::TimeZon
           will cause taint errors.

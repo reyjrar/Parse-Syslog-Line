@@ -10,17 +10,7 @@ use Readonly;
 use DateTime;
 use DateTime::Format::HTTP;
 
-=head1 NAME
-
-Parse::Syslog::Line - Parses Syslog Lines into Hashes
-
-=head1 VERSION
-
-Version 1.0
-
-=cut
-
-our $VERSION = '1.0';
+our $VERSION = '1.1';
 our $DateTimeCreate = 1;
 
 =head1 SYNOPSIS
@@ -162,7 +152,6 @@ Readonly my %REGEXP => (
     program_name    => qr/^([^\[\(]+)/,
     program_sub     => qr/\S+\(([^\)]+)\)/,
     program_pid     => qr/\S+\[([^\]]+)\]/,
-    content         => qr/\s+(.*)/,
 );
 
 =head1 VARIABLES
@@ -272,10 +261,10 @@ sub parse_syslog_line {
         }
     }
 
-    foreach my $var (qw(content)) {
-        ($msg{$var}) = ($raw_string =~ /$REGEXP{$var}/);
-    }
-    $msg{message} = "$msg{program_raw}: $msg{content}";
+    # Strip leading spaces from the string
+    $raw_string =~ s/^\s+//;
+    $msg{content} = $raw_string;
+    $msg{message} = defined $msg{program_raw} ? "$msg{program_raw}: $msg{content}" : $msg{content};
 
     #
     # Return our hash reference!

@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 1.0
+version 1.1
 
 # SYNOPSIS
 
@@ -41,14 +41,6 @@ parsed out.
     #       message_raw     => 'The message as it was passed',
     # };
     ...
-
-# NAME
-
-Parse::Syslog::Line - Parses Syslog Lines into Hashes
-
-# VERSION
-
-Version 1.0
 
 # EXPORT
 

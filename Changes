@@ -1,4 +1,7 @@
 Revision history for Parse-Syslog-Line
+1.1		Jan 06 2013 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Tests now pass regardless of time of year!
+
 1.1		Nov 06 2012 - Brad Lhotsky <brad@divisionbyzero.net>
         - Handle content and message entries a bit more
           intelligently.

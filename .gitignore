@@ -1,5 +1,6 @@
 *.bak
 .svn
+.build
 inc
 blib
 Parse-Syslog-Line-*

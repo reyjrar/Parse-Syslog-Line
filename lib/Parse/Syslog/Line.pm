@@ -10,7 +10,7 @@ use Readonly;
 use DateTime;
 use DateTime::Format::HTTP;
 
-our $VERSION = '1.1';
+our $VERSION = '1.2';
 our $DateTimeCreate = 1;
 
 =head1 SYNOPSIS

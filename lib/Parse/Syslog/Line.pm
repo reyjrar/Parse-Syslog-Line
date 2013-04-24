@@ -203,24 +203,20 @@ sub parse_syslog_line {
     #
     # Handle Date/Time
     if( $raw_string =~ s/$REGEXP{date}//) {
-        $msg{datetime_raw} = $1;
+        $msg{date_raw} = $1;
 
         # Only parse the DatetTime if we're configured to do so
-        if ($DateTimeCreate) {
-            if( defined $msg{datetime_raw} && length($msg{datetime_raw}) > 0 ) {
-                my $dt = DateTime::Format::HTTP->parse_datetime( $msg{datetime_raw} );
-                $msg{date}          = $dt->ymd('-');
-                $msg{time}          = $dt->hms;
-                $msg{epoch}         = $dt->epoch;
-                $msg{date_str}      = $dt->ymd('-') . ' ' . $dt->hms;
-                $msg{datetime_obj}  = $dt;
-            }
-        } elsif ($FmtDate) {
-            if( defined $msg{datetime_raw} && length($msg{datetime_raw}) > 0 ) {
-                ($msg{date}, $msg{time}, $msg{epoch}, $msg{date_str}) = eval $FmtDate;
-            }
+        if ($DateTimeCreate and defined($msg{date_raw}) and length($msg{date_raw}) > 0 ) {
+            my $dt = DateTime::Format::HTTP->parse_datetime( $msg{date_raw} );
+            $msg{date}          = $dt->ymd('-');
+            $msg{time}          = $dt->hms;
+            $msg{epoch}         = $dt->epoch;
+            $msg{date_str}      = $dt->ymd('-') . ' ' . $dt->hms;
+            $msg{datetime_obj}  = $dt;
+        } elsif ($FmtDate and defined($msg{date_raw}) and length($msg{date_raw}) > 0 ) {
+            ($msg{date}, $msg{time}, $msg{epoch}, $msg{date_str}) = $FmtDate->($msg{date_raw});
         } else {
-            foreach my $var (qw(date time date_str datetime_obj datetime_raw)) {
+            foreach my $var (qw(date time date_str datetime_obj date_raw)) {
                 $msg{$var} = undef;
             }
         }

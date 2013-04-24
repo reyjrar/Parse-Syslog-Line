@@ -1,6 +1,6 @@
 #!perl
 
-use Test::More tests => 5;
+use Test::More tests => 9;
 
 use Data::Dumper;
 use DateTime;
@@ -18,6 +18,8 @@ my %msgs = (
 	'Without Preamble' => q|Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
 	'Dotted Hostname' => q|<11>Jan  1 00:00:00 dev.example.com dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
 );
+
+@dtfields = qw/time datetime_obj epoch date_str/;
 
 my %resps = (
   'Snort Message Parse' => {
@@ -117,3 +119,24 @@ foreach my $name (keys %msgs) {
 	delete $msg->{datetime_obj};
 	is_deeply( $msg, $resps{$name}, $name );
 }
+
+sub parse_func {
+    my ($date) = @_;
+    $date //= " ";
+    my $modified = "[$date]";
+
+    return $modified, undef, undef, undef;
+}
+
+$Parse::Syslog::Line::DateTimeCreate = 0;
+$Parse::Syslog::Line::FmtDate = \&parse_func;
+
+foreach my $name (keys %msgs) {
+    foreach my $part (@dtfields) {
+        $resps{$name}{$part} = undef if exists $resps{$name}{$part};
+    }
+    $resps{$name}{date} = "[" . $resps{$name}{date_raw} . "]";
+    my $msg = parse_syslog_line($msgs{$name});
+    is_deeply( $msg, $resps{$name}, "FmtDate " . $name );
+}
+

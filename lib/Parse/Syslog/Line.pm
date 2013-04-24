@@ -12,6 +12,7 @@ use DateTime::Format::HTTP;
 
 our $VERSION = '1.2';
 our $DateTimeCreate = 1;
+our $FmtDate;
 
 =head1 SYNOPSIS
 
@@ -210,13 +211,17 @@ sub parse_syslog_line {
                 my $dt = DateTime::Format::HTTP->parse_datetime( $msg{datetime_raw} );
                 $msg{date}          = $dt->ymd('-');
                 $msg{time}          = $dt->hms;
-                $msg{datetime_str}  = $dt->ymd('-') . ' ' . $dt->hms;
+                $msg{epoch}         = $dt->epoch;
+                $msg{date_str}      = $dt->ymd('-') . ' ' . $dt->hms;
                 $msg{datetime_obj}  = $dt;
             }
-            else {
-                foreach my $var (qw(date time datetime_str datetime_obj datetime_raw)) {
-                    $msg{$var} = undef;
-                }
+        } elsif ($FmtDate) {
+            if( defined $msg{datetime_raw} && length($msg{datetime_raw}) > 0 ) {
+                ($msg{date}, $msg{time}, $msg{epoch}, $msg{date_str}) = eval $FmtDate;
+            }
+        } else {
+            foreach my $var (qw(date time date_str datetime_obj datetime_raw)) {
+                $msg{$var} = undef;
             }
         }
     }

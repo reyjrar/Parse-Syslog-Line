@@ -215,8 +215,9 @@ sub parse_syslog_line {
             $msg{datetime_obj}  = $dt;
         } elsif ($FmtDate and defined($msg{date_raw}) and length($msg{date_raw}) > 0 ) {
             ($msg{date}, $msg{time}, $msg{epoch}, $msg{date_str}) = $FmtDate->($msg{date_raw});
+            $msg{datetime_obj} = undef;
         } else {
-            foreach my $var (qw(date time date_str datetime_obj date_raw)) {
+            foreach my $var (qw(date time epoch date_str datetime_obj)) {
                 $msg{$var} = undef;
             }
         }

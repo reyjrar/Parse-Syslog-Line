@@ -137,7 +137,6 @@ foreach my $name (keys %msgs) {
     }
     $resps{$name}{date} = "[" . $resps{$name}{date_raw} . "]";
     my $msg = parse_syslog_line($msgs{$name});
-	delete $msg->{datetime_obj};
     is_deeply( $msg, $resps{$name}, "FmtDate " . $name );
 }
 

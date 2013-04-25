@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 1.2
+version 1.3
 
 # SYNOPSIS
 
@@ -65,7 +65,7 @@ returned in the $m->{datetime\_obj} field.  Otherwise, this will be skipped.
 
 Usage:
 
-    our $Parse::Syslog::Line::DateTimeCreate = 0;
+    $Parse::Syslog::Line::DateTimeCreate = 0;
 
 # FUNCTIONS
 
@@ -95,25 +95,13 @@ a hash reference as such:
         'as_int'    => 8,
     };
 
-# AUTHOR
+# DEVELOPMENT
 
-Brad Lhotsky, `<brad at divisionbyzero.net>`
+This module is developed with Dist::Zilla.  To build from the repository, use Dist::Zilla:
 
-# BUGS
-
-Please report any bugs or feature requests to
-`bug-parse-syslog-line at rt.cpan.org`, or through the web interface at
-[http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Parse-Syslog-Line](http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Parse-Syslog-Line).
-I will be notified, and then you'll automatically be notified of progress on
-your bug as I make changes.
-
-# SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Parse::Syslog::Line
-
-You can also look for information at:
+    dzil authordeps |cpanm
+    dzil build
+    dzil test
 
 - Github Page
 
@@ -136,6 +124,10 @@ You can also look for information at:
 [http://search.cpan.org/dist/Parse-Syslog-Line](http://search.cpan.org/dist/Parse-Syslog-Line)
 
 # ACKNOWLEDGEMENTS
+
+- Shawn Wilson
+
+Contribution of patch to support custom date parsing function
 
 # COPYRIGHT & LICENSE
 

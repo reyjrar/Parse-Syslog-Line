@@ -10,7 +10,7 @@ use Readonly;
 use DateTime;
 use DateTime::Format::HTTP;
 
-our $VERSION = '1.2';
+our $VERSION = '1.3';
 our $DateTimeCreate = 1;
 our $FmtDate;
 
@@ -164,7 +164,7 @@ returned in the $m->{datetime_obj} field.  Otherwise, this will be skipped.
 
 Usage:
 
-  our $Parse::Syslog::Line::DateTimeCreate = 0;
+  $Parse::Syslog::Line::DateTimeCreate = 0;
 
 
 =head1 FUNCTIONS
@@ -330,26 +330,13 @@ sub preamble_facility {
 
 }
 
+=head1 DEVELOPMENT
 
-=head1 AUTHOR
+This module is developed with Dist::Zilla.  To build from the repository, use Dist::Zilla:
 
-Brad Lhotsky, C<< <brad at divisionbyzero.net> >>
-
-=head1 BUGS
-
-Please report any bugs or feature requests to
-C<bug-parse-syslog-line at rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Parse-Syslog-Line>.
-I will be notified, and then you'll automatically be notified of progress on
-your bug as I make changes.
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Parse::Syslog::Line
-
-You can also look for information at:
+    dzil authordeps |cpanm
+    dzil build
+    dzil test
 
 =over 4
 
@@ -376,6 +363,14 @@ L<http://search.cpan.org/dist/Parse-Syslog-Line>
 =back
 
 =head1 ACKNOWLEDGEMENTS
+
+=over 4
+
+=item Shawn Wilson
+
+Contribution of patch to support custom date parsing function
+
+=back
 
 =head1 COPYRIGHT & LICENSE
 

@@ -150,7 +150,7 @@ Readonly my %REGEXP => (
     date            => qr/^(\w{3}\s+\d+\s+\d+(\:\d+){1,2})/,
     host            => qr/^\s*(\S+)/,
     program_raw     => qr/^\s*([^:]+):/,
-    program_name    => qr/^([^\[\(]+)/,
+    program_name    => qr/^([^\[\(\ ]+)/,
     program_sub     => qr/\S+\(([^\)]+)\)/,
     program_pid     => qr/\S+\[([^\]]+)\]/,
 );

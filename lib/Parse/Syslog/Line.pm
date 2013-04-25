@@ -149,8 +149,8 @@ Readonly my %REGEXP => (
     preamble        => qr/^\<(\d+)\>/,
     date            => qr/^(\w{3}\s+\d+\s+\d+(\:\d+){1,2})/,
     host            => qr/^\s*(\S+)/,
-    program_raw     => qr/^\s*(\S+):/,
-    program_name    => qr/^([^\[\(]+)/,
+    program_raw     => qr/^\s*([^:]+):/,
+    program_name    => qr/^([^\[\(\ ]+)/,
     program_sub     => qr/\S+\(([^\)]+)\)/,
     program_pid     => qr/\S+\[([^\]]+)\]/,
 );
@@ -206,14 +206,14 @@ sub parse_syslog_line {
         $msg{date_raw} = $1;
 
         # Only parse the DatetTime if we're configured to do so
-        if ($DateTimeCreate and defined($msg{date_raw}) and length($msg{date_raw}) > 0 ) {
+        if( $DateTimeCreate and defined($msg{date_raw}) and length($msg{date_raw}) > 0 ) {
             my $dt = DateTime::Format::HTTP->parse_datetime( $msg{date_raw} );
             $msg{date}          = $dt->ymd('-');
             $msg{time}          = $dt->hms;
             $msg{epoch}         = $dt->epoch;
             $msg{date_str}      = $dt->ymd('-') . ' ' . $dt->hms;
             $msg{datetime_obj}  = $dt;
-        } elsif ($FmtDate and defined($msg{date_raw}) and length($msg{date_raw}) > 0 ) {
+        } elsif( $FmtDate and defined($msg{date_raw}) and length($msg{date_raw}) > 0 ) {
             ($msg{date}, $msg{time}, $msg{epoch}, $msg{date_str}) = $FmtDate->($msg{date_raw});
             $msg{datetime_obj} = undef;
         } else {

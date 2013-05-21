@@ -10,7 +10,7 @@ use Readonly;
 use DateTime;
 use DateTime::Format::HTTP;
 
-our $VERSION = '1.3';
+our $VERSION = '1.4';
 our $DateTimeCreate = 1;
 our $FmtDate;
 
@@ -37,6 +37,7 @@ parsed out.
     #       datetime_str    => 'YYYY-MM-DD HH:MM:SS',
     #       datetime_obj    => new DateTime(), # If installed
     #       datetime_raw    => 'Feb 17 11:12:13'
+    #       date_raw        => 'Feb 17 11:12:13'
     #       host_raw        => 'hostname',  # Hostname as it appeared in the message
     #       host            => 'hostname',  # Hostname without domain
     #       domain          => 'blah.com',  # if provided
@@ -203,18 +204,18 @@ sub parse_syslog_line {
     #
     # Handle Date/Time
     if( $raw_string =~ s/$REGEXP{date}//) {
-        $msg{date_raw} = $1;
+        $msg{date_raw} = $msg{datetime_raw} = $1;
 
         # Only parse the DatetTime if we're configured to do so
-        if( $DateTimeCreate and defined($msg{date_raw}) and length($msg{date_raw}) > 0 ) {
-            my $dt = DateTime::Format::HTTP->parse_datetime( $msg{date_raw} );
+        if( $DateTimeCreate and defined($msg{datetime_raw}) and length($msg{datetime_raw}) > 0 ) {
+            my $dt = DateTime::Format::HTTP->parse_datetime( $msg{datetime_raw} );
             $msg{date}          = $dt->ymd('-');
             $msg{time}          = $dt->hms;
             $msg{epoch}         = $dt->epoch;
             $msg{date_str}      = $dt->ymd('-') . ' ' . $dt->hms;
             $msg{datetime_obj}  = $dt;
-        } elsif( $FmtDate and defined($msg{date_raw}) and length($msg{date_raw}) > 0 ) {
-            ($msg{date}, $msg{time}, $msg{epoch}, $msg{date_str}) = $FmtDate->($msg{date_raw});
+        } elsif( $FmtDate and defined($msg{datetime_raw}) and length($msg{datetime_raw}) > 0 ) {
+            ($msg{date}, $msg{time}, $msg{epoch}, $msg{date_str}) = $FmtDate->($msg{datetime_raw});
             $msg{datetime_obj} = undef;
         } else {
             foreach my $var (qw(date time epoch date_str datetime_obj)) {

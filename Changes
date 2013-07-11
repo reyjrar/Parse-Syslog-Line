@@ -1,4 +1,8 @@
 Revision history for Parse-Syslog-Line
+1.5     Jul 11 2013 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Patch from Mattia Barbon for HTTP::Date PArsing
+        - Fix handling of weird Cisco "programs"
+
 1.4     Apr 25 2013 - Brad Lhotsky <brad@divisionbyzero.net>
         - Patch from Shawn Wilson to handle multi-word "program" messages.
         - Reverted change of "datetime_raw" to "date_raw", both exist.

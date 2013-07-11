@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 1.4
+version 1.5
 
 # SYNOPSIS
 
@@ -26,6 +26,7 @@ parsed out.
     #       facility_int    => 8,
     #       date            => 'YYYY-MM-DD',
     #       time            => 'HH::MM:SS',
+    #       epoch           => 1361095933,
     #       datetime_str    => 'YYYY-MM-DD HH:MM:SS',
     #       datetime_obj    => new DateTime(), # If installed
     #       datetime_raw    => 'Feb 17 11:12:13'
@@ -67,6 +68,16 @@ returned in the $m->{datetime\_obj} field.  Otherwise, this will be skipped.
 Usage:
 
     $Parse::Syslog::Line::DateTimeCreate = 0;
+
+## EpochCreate
+
+If this variable is set to 1, the number of seconds from UNIX epoch
+will be returned in the $m->{datetime\_epoch} field.  If DateTimeCreate is
+not set, the parser will use `HTTP::Date` to perform the parsing
+
+Usage:
+
+    our $Parse::Syslog::Line::EpochCreate = 1;
 
 # FUNCTIONS
 

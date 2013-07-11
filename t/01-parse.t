@@ -1,6 +1,6 @@
 #!perl
 
-use Test::More tests => 11;
+use Test::More;
 
 use Data::Dumper;
 use DateTime;
@@ -14,13 +14,15 @@ BEGIN {
 
 my %msgs = (
 	'Snort Message Parse' => q|<11>Jan  1 00:00:00 mainfw snort[32640]: [1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161|,
-	'IP as Hostname' => q|<11>Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
-	'Without Preamble' => q|Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
-	'Dotted Hostname' => q|<11>Jan  1 00:00:00 dev.example.com dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
-	'Syslog reset' => q|Jan  1 00:00:00 example syslogd 1.2.3: restart (remote reception).|,
+	'IP as Hostname'      => q|<11>Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
+	'Without Preamble'    => q|Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
+	'Dotted Hostname'     => q|<11>Jan  1 00:00:00 dev.example.com dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
+	'Syslog reset'        => q|Jan  1 00:00:00 example syslogd 1.2.3: restart (remote reception).|,
+    'Cisco ASA'           => q|<163>Jun 7 18:39:00 hostname.domain.tld %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside|,
+    'Cisco ASA Alt'       => q|<161>Jun 7 18:39:00 hostname : %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside|,
 );
 
-@dtfields = qw/time datetime_obj epoch date_str/;
+@dtfields = qw/time datetime_obj epoch date_str datetime_str/;
 
 my %resps = (
   'Snort Message Parse' => {
@@ -38,6 +40,7 @@ my %resps = (
           'message_raw' => '<11>Jan  1 00:00:00 mainfw snort[32640]: [1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161',
           'priority_int' => 3,
           'preamble' => '11',
+          'datetime_str' => qq{$year-01-01 00:00:00},
           'date_str' => qq{$year-01-01 00:00:00},
           'epoch' => 1356998400,
           'program_pid' => '32640',
@@ -62,6 +65,7 @@ my %resps = (
           'priority_int' => 3,
           'preamble' => '11',
           'date_str' => qq{$year-01-01 00:00:00},
+          'datetime_str' => qq{$year-01-01 00:00:00},
           'epoch' => 1356998400,
           'program_pid' => undef,
           'facility_int' => 8,
@@ -85,6 +89,7 @@ my %resps = (
           'priority_int' => undef,
           'preamble' => undef,
           'date_str' => qq{$year-01-01 00:00:00},
+          'datetime_str' => qq{$year-01-01 00:00:00},
           'epoch' => 1356998400,
           'program_pid' => undef,
           'facility_int' => undef,
@@ -108,6 +113,7 @@ my %resps = (
           'priority_int' => 3,
           'preamble' => '11',
           'date_str' => qq{$year-01-01 00:00:00},
+          'datetime_str' => qq{$year-01-01 00:00:00},
           'epoch' => 1356998400,
           'program_pid' => undef,
           'facility_int' => 8,
@@ -131,12 +137,61 @@ my %resps = (
           'priority_int' => undef,
           'preamble' => undef,
           'date_str' => qq{$year-01-01 00:00:00},
+          'datetime_str' => qq{$year-01-01 00:00:00},
           'epoch' => 1356998400,
           'program_pid' => undef,
           'facility_int' => undef,
           'program_name' => 'syslogd',
           'message' => 'syslogd 1.2.3: restart (remote reception).',
           'host' => 'example'
+        },
+ 'Cisco ASA' => {
+           'priority' => 'err',
+           'time' => '18:39:00',
+           'date' => '2013-06-07',
+           'content' => 'Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside',
+           'facility' => 'local4',
+           'domain' => 'domain.tld',
+           'program_sub' => undef,
+           'host_raw' => 'hostname.domain.tld',
+           'program_raw' => '%ASA-3-313001',
+           'datetime_raw' => 'Jun 7 18:39:00',
+           'date_str' => '2013-06-07 18:39:00',
+           'message_raw' => '<163>Jun 7 18:39:00 hostname.domain.tld %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside',
+           'priority_int' => 3,
+           'epoch' => 1370630340,
+           'preamble' => '163',
+           'datetime_str' => '2013-06-07 18:39:00',
+           'program_pid' => undef,
+           'program_name' => '%ASA-3-313001',
+           'facility_int' => 160,
+           'message' => '%ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside',
+           'host' => 'hostname',
+           'date_raw' => 'Jun 7 18:39:00'
+        },
+ 'Cisco ASA Alt' => {
+           'priority' => 'alert',
+           'time' => '18:39:00',
+           'date' => '2013-06-07',
+           'content' => 'Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside',
+           'facility' => 'local4',
+           'domain' => undef,
+           'program_sub' => undef,
+           'host_raw' => 'hostname',
+           'program_raw' => '%ASA-3-313001',
+           'datetime_raw' => 'Jun 7 18:39:00',
+           'date_str' => '2013-06-07 18:39:00',
+           'message_raw' => '<161>Jun 7 18:39:00 hostname : %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside',
+           'priority_int' => 1,
+           'epoch' => 1370630340,
+           'preamble' => '161',
+           'datetime_str' => '2013-06-07 18:39:00',
+           'program_pid' => undef,
+           'program_name' => undef,
+           'facility_int' => 160,
+           'message' => '%ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside',
+           'host' => 'hostname',
+           'date_raw' => 'Jun 7 18:39:00'
         },
 );
 
@@ -145,6 +200,9 @@ my %resps = (
 foreach my $name (keys %msgs) {
 	my $msg = parse_syslog_line($msgs{$name});
 	delete $msg->{datetime_obj};
+    if ( !exists $resps{$name} ) {
+        diag( Dumper $msg );
+    }
 	is_deeply( $msg, $resps{$name}, $name );
 }
 
@@ -168,3 +226,4 @@ foreach my $name (keys %msgs) {
     is_deeply( $msg, $resps{$name}, "FmtDate " . $name );
 }
 
+done_testing();

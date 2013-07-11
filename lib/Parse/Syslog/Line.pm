@@ -9,10 +9,12 @@ use Exporter;
 use Readonly;
 use DateTime;
 use DateTime::Format::HTTP;
+use HTTP::Date;
 
-our $VERSION = '1.4';
+our $VERSION = '1.5';
 our $DateTimeCreate = 1;
 our $FmtDate;
+our $EpochCreate = 0;
 
 =head1 SYNOPSIS
 
@@ -34,6 +36,7 @@ parsed out.
     #       facility_int    => 8,
     #       date            => 'YYYY-MM-DD',
     #       time            => 'HH::MM:SS',
+    #       epoch           => 1361095933,
     #       datetime_str    => 'YYYY-MM-DD HH:MM:SS',
     #       datetime_obj    => new DateTime(), # If installed
     #       datetime_raw    => 'Feb 17 11:12:13'
@@ -167,6 +170,15 @@ Usage:
 
   $Parse::Syslog::Line::DateTimeCreate = 0;
 
+=head2 EpochCreate
+
+If this variable is set to 1, the number of seconds from UNIX epoch
+will be returned in the $m->{datetime_epoch} field.  If DateTimeCreate is
+not set, the parser will use C<HTTP::Date> to perform the parsing
+
+Usage:
+
+  our $Parse::Syslog::Line::EpochCreate = 1;
 
 =head1 FUNCTIONS
 
@@ -212,16 +224,36 @@ sub parse_syslog_line {
             $msg{date}          = $dt->ymd('-');
             $msg{time}          = $dt->hms;
             $msg{epoch}         = $dt->epoch;
-            $msg{date_str}      = $dt->ymd('-') . ' ' . $dt->hms;
+            $msg{datetime_str}      = $dt->ymd('-') . ' ' . $dt->hms;
             $msg{datetime_obj}  = $dt;
-        } elsif( $FmtDate and defined($msg{datetime_raw}) and length($msg{datetime_raw}) > 0 ) {
-            ($msg{date}, $msg{time}, $msg{epoch}, $msg{date_str}) = $FmtDate->($msg{datetime_raw});
+        }
+        elsif( $FmtDate and defined($msg{datetime_raw}) and length($msg{datetime_raw}) > 0 ) {
+            ($msg{date}, $msg{time}, $msg{epoch}, $msg{datetime_str}) = $FmtDate->($msg{datetime_raw});
             $msg{datetime_obj} = undef;
-        } else {
+        }
+        elsif ($EpochCreate) {
+            if( defined $msg{datetime_raw} && length($msg{datetime_raw}) > 0 ) {
+                $msg{epoch} = HTTP::Date::str2time($msg{datetime_raw});
+                $msg{datetime_str}   = HTTP::Date::time2iso($msg{epoch});
+            }
+            else {
+                foreach my $var (qw(epoch datetime_str datetime_obj)) {
+                    $msg{$var} = undef;
+                }
+            }
+        }
+        else {
             foreach my $var (qw(date time epoch date_str datetime_obj)) {
                 $msg{$var} = undef;
             }
+            if ($EpochCreate && $msg{datetime_obj}) {
+                $msg{epoch} = $msg{datetime_obj}->epoch;
+            }
+            else {
+                $msg{epoch} = undef;
+            }
         }
+        $msg{date_str} = $msg{datetime_str} if exists $msg{datetime_str};
     }
 
     #
@@ -251,17 +283,21 @@ sub parse_syslog_line {
     # Parse the Program portion
     if( $raw_string =~ s/$REGEXP{program_raw}// ) {
         my $progStr = $1;
-        if( defined $progStr ) {
+        $progStr =~ s/\s+$//g;
+        if( defined $progStr && length $progStr) {
             $msg{program_raw} = $progStr;
             foreach my $var (qw(program_name program_pid program_sub)) {
                 ($msg{$var}) = ($progStr =~ /$REGEXP{$var}/);
             }
         }
-    }
-    else {
-        foreach my $var (qw(program_raw program_name program_pid program_sub)) {
-            $msg{$var} = undef;
+        else {
+            if ( $raw_string =~ s/$REGEXP{program_raw}// ) {
+                $msg{program_raw} = $1;
+            }
         }
+    }
+    foreach my $var (qw(program_raw program_name program_pid program_sub)) {
+        $msg{$var} = undef unless exists $msg{$var};
     }
 
     # Strip leading spaces from the string

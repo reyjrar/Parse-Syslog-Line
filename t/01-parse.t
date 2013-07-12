@@ -187,7 +187,7 @@ my %resps = (
            'preamble' => '161',
            'datetime_str' => '2013-06-07 18:39:00',
            'program_pid' => undef,
-           'program_name' => undef,
+           'program_name' => '%ASA-3-313001',
            'facility_int' => 160,
            'message' => '%ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside',
            'host' => 'hostname',

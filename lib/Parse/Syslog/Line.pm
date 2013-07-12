@@ -11,7 +11,7 @@ use DateTime;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION = '1.5';
+our $VERSION = '1.6';
 our $DateTimeCreate = 1;
 our $FmtDate;
 our $EpochCreate = 0;
@@ -292,7 +292,7 @@ sub parse_syslog_line {
         }
         else {
             if ( $raw_string =~ s/$REGEXP{program_raw}// ) {
-                $msg{program_raw} = $1;
+                $msg{program_name} = $msg{program_raw} = $1;
             }
         }
     }

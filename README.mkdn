@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 1.5
+version 1.6
 
 # SYNOPSIS
 
@@ -117,29 +117,29 @@ This module is developed with Dist::Zilla.  To build from the repository, use Di
 
 - Github Page
 
-    [http://github.com/reyjrar/Parse-Syslog-Line](http://github.com/reyjrar/Parse-Syslog-Line)
+[http://github.com/reyjrar/Parse-Syslog-Line](http://github.com/reyjrar/Parse-Syslog-Line)
 
 - AnnoCPAN: Annotated CPAN documentation
 
-    [http://annocpan.org/dist/Parse-Syslog-Line](http://annocpan.org/dist/Parse-Syslog-Line)
+[http://annocpan.org/dist/Parse-Syslog-Line](http://annocpan.org/dist/Parse-Syslog-Line)
 
 - CPAN Ratings
 
-    [http://cpanratings.perl.org/d/Parse-Syslog-Line](http://cpanratings.perl.org/d/Parse-Syslog-Line)
+[http://cpanratings.perl.org/d/Parse-Syslog-Line](http://cpanratings.perl.org/d/Parse-Syslog-Line)
 
 - RT: CPAN's request tracker
 
-    [http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line](http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line)
+[http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line](http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line)
 
 - Search CPAN
 
-    [http://search.cpan.org/dist/Parse-Syslog-Line](http://search.cpan.org/dist/Parse-Syslog-Line)
+[http://search.cpan.org/dist/Parse-Syslog-Line](http://search.cpan.org/dist/Parse-Syslog-Line)
 
 # ACKNOWLEDGEMENTS
 
 - Shawn Wilson
 
-    Contribution of patch to support custom date parsing function
+Contribution of patch to support custom date parsing function
 
 # COPYRIGHT & LICENSE
 

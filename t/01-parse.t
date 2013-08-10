@@ -20,6 +20,7 @@ my %msgs = (
 	'Syslog reset'        => q|Jan  1 00:00:00 example syslogd 1.2.3: restart (remote reception).|,
     'Cisco ASA'           => q|<163>Jun 7 18:39:00 hostname.domain.tld %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside|,
     'Cisco ASA Alt'       => q|<161>Jun 7 18:39:00 hostname : %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside|,
+    'Cisco NX-OS'         => q|2013-08-09T11:09:36+02:00 hostname.company.tld : 2013 Aug  9 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)|,
 );
 
 @dtfields = qw/time datetime_obj epoch date_str datetime_str/;
@@ -193,6 +194,31 @@ my %resps = (
            'host' => 'hostname',
            'date_raw' => 'Jun 7 18:39:00'
         },
+  'Cisco NX-OS' => {
+            message_raw => q|2013-08-09T11:09:36+02:00 hostname.company.tld : 2013 Aug  9 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)|,
+           'priority' => undef,
+           'time' => '11:09:36',
+           'date' => '2013-08-09',
+           'content' => 'Interface Ethernet121/1/1 is down(Config change)',
+           'facility' => undef,
+           'domain' => 'company.tld',
+           'program_sub' => undef,
+           'host_raw' => 'hostname.company.tld',
+           'program_raw' => '%ETHPORT-5-IF_DOWN_CFG_CHANGE',
+           'date_raw' => '2013-08-09T11:09:36+02:00',
+           'datetime_raw' => '2013-08-09T11:09:36+02:00',
+           'date_str' => '2013-08-09 11:09:36',
+           'datetime_str' => '2013-08-09 11:09:36',
+           'priority_int' => undef,
+           'epoch' => 1376039376,
+           'preamble' => undef,
+           'program_pid' => undef,
+           'program_name' => '%ETHPORT-5-IF_DOWN_CFG_CHANGE',
+           'facility_int' => undef,
+           'message' => '%ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)',
+           'host' => 'hostname',
+    },
+
 );
 
 #
@@ -203,7 +229,7 @@ foreach my $name (keys %msgs) {
     if ( !exists $resps{$name} ) {
         diag( Dumper $msg );
     }
-	is_deeply( $msg, $resps{$name}, $name );
+	is_deeply( $msg, $resps{$name}, $name ) || diag(Dumper $msg);
 }
 
 sub parse_func {

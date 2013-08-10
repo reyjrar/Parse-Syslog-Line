@@ -1,4 +1,8 @@
 Revision history for Parse-Syslog-Line
+1.7     Aug 10 2013 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Added support for Cisco NX-OS formatted messages
+        - Cleanup cruft in documentation
+
 1.6     Jul 12 2013 - Brad Lhotsky <brad@divisionbyzero.net>
         - Set program_name and program_raw in Cisco ASA Log formats
 

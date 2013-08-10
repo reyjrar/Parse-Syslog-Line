@@ -11,7 +11,7 @@ use DateTime;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION = '1.6';
+our $VERSION = '1.7';
 our $DateTimeCreate = 1;
 our $FmtDate;
 our $EpochCreate = 0;
@@ -151,13 +151,35 @@ Readonly my %RE => (
 # Regex to Extract Data
 Readonly my %REGEXP => (
     preamble        => qr/^\<(\d+)\>/,
-    date            => qr/^(\w{3}\s+\d+\s+\d+(\:\d+){1,2})/,
+    date            => qr/^(
+            [a-zA-Z]{3}\s+[0-9]+            # Date: Mon  9
+            \s+                             # Date Separator: spaces
+            [0-9]{1,2}(\:[0-9]{2}){1,2}     # Time: HH:MM or HH:MM:SS
+    )/x,
+    date_long => qr/^(
+            ([0-9]{4}\s+)?                  # Year: Because, Cisco
+            [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
+            \s+                             # Date Separator: spaces
+            [0-9]{1,2}(\:[0-9]{2}){1,2}     # Time: HH:MM or HH:MM:SS
+            (\.[0-9]{3})?                   # Time: .DDD ms resolution
+            (\s+[A-Z]{3,4})?                # Timezone, ZZZ or ZZZZ
+            (\:?)                           # Cisco adds a : after the second timestamp
+    )/x,
+    date_iso8601    => qr/^(
+            [0-9]{4}(\-[0-9]{2}){2}     # Date YYYY-MM-DD
+            (\s|T)                      # Date Separator T or ' '
+            [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
+            ([+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
+    )/x,
     host            => qr/^\s*(\S+)/,
+    cisco_hates_you => qr/^\s*:\s+/,
     program_raw     => qr/^\s*([^:]+):/,
     program_name    => qr/^([^\[\(\ ]+)/,
     program_sub     => qr/\S+\(([^\)]+)\)/,
     program_pid     => qr/\S+\[([^\]]+)\]/,
 );
+
+# 2013-08-09T11:09:36+02:00 hostname.company.tld : 2013 Aug  9 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)
 
 =head1 VARIABLES
 
@@ -216,7 +238,13 @@ sub parse_syslog_line {
     #
     # Handle Date/Time
     if( $raw_string =~ s/$REGEXP{date}//) {
-        $msg{date_raw} = $msg{datetime_raw} = $1;
+        $msg{datetime_raw} = $1;
+    }
+    elsif( $raw_string =~ s/$REGEXP{date_iso8601}//) {
+        $msg{datetime_raw} = $1;
+    }
+    if( exists $msg{datetime_raw} && length $msg{datetime_raw} ) {
+        $msg{date_raw} = $msg{datetime_raw};
 
         # Only parse the DatetTime if we're configured to do so
         if( $DateTimeCreate and defined($msg{datetime_raw}) and length($msg{datetime_raw}) > 0 ) {
@@ -277,6 +305,10 @@ sub parse_syslog_line {
         foreach my $var (qw(host host_raw domain)) {
             $msg{$var} = undef;
         }
+    }
+    if( $raw_string =~ s/$REGEXP{cisco_hates_you}// ) {
+        # Yes, Cisco adds a second timestamp to it's messages, because it hates you.
+        $raw_string =~ s/$REGEXP{date_long}//;
     }
 
     #
@@ -403,19 +435,18 @@ L<http://search.cpan.org/dist/Parse-Syslog-Line>
 
 =over 4
 
+=item Mattia Barbon
+
+Contribution of patch to support faster HTTP::Date routines
+
+=item Alexander Hartmaier
+
+Contribution of log samples for Cisco devices and testing
+
 =item Shawn Wilson
 
 Contribution of patch to support custom date parsing function
 
 =back
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright 2007 Brad Lhotsky, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
-
-=cut
 
 1; # End of Parse::Syslog::Line

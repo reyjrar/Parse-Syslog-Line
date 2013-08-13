@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 1.7
+version 1.8
 
 # SYNOPSIS
 
@@ -28,8 +28,10 @@ parsed out.
     #       time            => 'HH::MM:SS',
     #       epoch           => 1361095933,
     #       datetime_str    => 'YYYY-MM-DD HH:MM:SS',
+    #       datet_str       => 'YYYY-MM-DD HH:MM:SS',
     #       datetime_obj    => new DateTime(), # If installed
     #       datetime_raw    => 'Feb 17 11:12:13'
+    #       date_raw        => 'Feb 17 11:12:13'
     #       date_raw        => 'Feb 17 11:12:13'
     #       host_raw        => 'hostname',  # Hostname as it appeared in the message
     #       host            => 'hostname',  # Hostname without domain
@@ -72,12 +74,36 @@ Usage:
 ## EpochCreate
 
 If this variable is set to 1, the number of seconds from UNIX epoch
-will be returned in the $m->{datetime\_epoch} field.  If DateTimeCreate is
+will be returned in the $m->{epoch} field.  If DateTimeCreate is
 not set, the parser will use `HTTP::Date` to perform the parsing
 
 Usage:
 
-    our $Parse::Syslog::Line::EpochCreate = 1;
+    $Parse::Syslog::Line::EpochCreate = 1;
+
+## PruneRaw
+
+This variable defaults to 0, set to 1 to delete all keys in the return hash ending in "\_raw"
+
+Usage:
+
+    $Parse::Syslog::Line::PruneRaw = 1;
+
+## PruneEmpty
+
+This variable defaults to 0, set to 1 to delete all keys in the return hash which are undefined.
+
+Usage:
+
+    $Parse::Syslog::Line::PruneEmpty = 1;
+
+## PruneFields
+
+This should be an array of fields you'd like to be removed from the hash reference.
+
+Usage:
+
+    @Parse::Syslog::Line::PruneFields = qw(date_str date_raw facility_int priority_int);
 
 # FUNCTIONS
 
@@ -117,39 +143,37 @@ This module is developed with Dist::Zilla.  To build from the repository, use Di
 
 - Github Page
 
-[http://github.com/reyjrar/Parse-Syslog-Line](http://github.com/reyjrar/Parse-Syslog-Line)
+    [http://github.com/reyjrar/Parse-Syslog-Line](http://github.com/reyjrar/Parse-Syslog-Line)
 
 - AnnoCPAN: Annotated CPAN documentation
 
-[http://annocpan.org/dist/Parse-Syslog-Line](http://annocpan.org/dist/Parse-Syslog-Line)
+    [http://annocpan.org/dist/Parse-Syslog-Line](http://annocpan.org/dist/Parse-Syslog-Line)
 
 - CPAN Ratings
 
-[http://cpanratings.perl.org/d/Parse-Syslog-Line](http://cpanratings.perl.org/d/Parse-Syslog-Line)
+    [http://cpanratings.perl.org/d/Parse-Syslog-Line](http://cpanratings.perl.org/d/Parse-Syslog-Line)
 
 - RT: CPAN's request tracker
 
-[http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line](http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line)
+    [http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line](http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line)
 
 - Search CPAN
 
-[http://search.cpan.org/dist/Parse-Syslog-Line](http://search.cpan.org/dist/Parse-Syslog-Line)
+    [http://search.cpan.org/dist/Parse-Syslog-Line](http://search.cpan.org/dist/Parse-Syslog-Line)
 
 # ACKNOWLEDGEMENTS
 
 - Mattia Barbon
 
-Contribution of patch to support faster HTTP::Date routines
+    Contribution of patch to support faster HTTP::Date routines
 
 - Alexander Hartmaier
 
-Contribution of log samples for Cisco devices and testing
+    Contribution of log samples for Cisco devices and testing
 
 - Shawn Wilson
 
-Contribution of patch to support custom date parsing function
-
-1; \# End of Parse::Syslog::Line
+    Contribution of patch to support custom date parsing function
 
 # AUTHOR
 

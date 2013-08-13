@@ -20,13 +20,21 @@ timethese(10_000, {
     'Defaults' => sub {
         parse_syslog_line($_) for @msgs
     },
-    'No DateTime' => sub {
+    'No Date Parsing' => sub {
         local $Parse::Syslog::Line::DateTimeCreate = 0;
+        local $Parse::Syslog::Line::EpochCreate    = 0;
         parse_syslog_line($_) for @msgs
     },
     'Epoch Only' => sub {
         local $Parse::Syslog::Line::DateTimeCreate = 0;
-        local $Parse::Syslog::Line::EpochCreate = 1;
+        local $Parse::Syslog::Line::EpochCreate    = 1;
+        parse_syslog_line($_) for @msgs
+    },
+    'Minimalistic Data' => sub {
+        local $Parse::Syslog::Line::DateTimeCreate = 0;
+        local $Parse::Syslog::Line::EpochCreate    = 0;
+        local $Parse::Syslog::Line::PruneRaw       = 1;
+        local $Parse::Syslog::Line::PruneEmpty     = 1;
         parse_syslog_line($_) for @msgs
     },
 });

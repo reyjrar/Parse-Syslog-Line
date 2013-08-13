@@ -11,6 +11,7 @@ my $year = $dt->year;
 BEGIN {
 	use_ok( 'Parse::Syslog::Line' );
 }
+$Parse::Syslog::Line::EpochCreate = 1;
 
 my %msgs = (
 	'Snort Message Parse' => q|<11>Jan  1 00:00:00 mainfw snort[32640]: [1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161|,
@@ -21,6 +22,7 @@ my %msgs = (
     'Cisco ASA'           => q|<163>Jun 7 18:39:00 hostname.domain.tld %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside|,
     'Cisco ASA Alt'       => q|<161>Jun 7 18:39:00 hostname : %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside|,
     'Cisco NX-OS'         => q|2013-08-09T11:09:36+02:00 hostname.company.tld : 2013 Aug  9 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)|,
+    'Cisco Catalyst'      => q|<188>Aug 13 00:10:02 10.43.0.10 1813056: Aug 13 00:15:02: %C4K_EBM-4-HOSTFLAPPING: Host 00:1B:21:4B:7B:5D in vlan 1 is flapping between port Gi6/37 and port Gi6/38|,
 );
 
 @dtfields = qw/time datetime_obj epoch date_str datetime_str/;
@@ -218,7 +220,30 @@ my %resps = (
            'message' => '%ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)',
            'host' => 'hostname',
     },
-
+    'Cisco Catalyst' => {
+            message_raw => q|<188>Aug 13 00:10:02 10.43.0.10 1813056: Aug 13 00:15:02: %C4K_EBM-4-HOSTFLAPPING: Host 00:1B:21:4B:7B:5D in vlan 1 is flapping between port Gi6/37 and port Gi6/38|,
+           'priority' => 'warn',
+           'priority_int' => 4,
+           'time' => '00:10:02',
+           'date' => '2013-08-13',
+           'content' =>'Host 00:1B:21:4B:7B:5D in vlan 1 is flapping between port Gi6/37 and port Gi6/38',
+           'facility' => 'local7',
+           'facility_int' => 184,
+           'domain' => undef,
+           'program_sub' => undef,
+           'host_raw' => '10.43.0.10',
+           'program_raw' => '%C4K_EBM-4-HOSTFLAPPING',
+           'date_raw' => 'Aug 13 00:10:02',
+           'datetime_raw' => 'Aug 13 00:10:02',
+           'date_str' => '2013-08-13 00:10:02',
+           'datetime_str' => '2013-08-13 00:10:02',
+           'epoch' => 1376352602,
+           'preamble' => 188,
+           'program_pid' => undef,
+           'program_name' => '%C4K_EBM-4-HOSTFLAPPING',
+           'message' => '%C4K_EBM-4-HOSTFLAPPING: Host 00:1B:21:4B:7B:5D in vlan 1 is flapping between port Gi6/37 and port Gi6/38',
+           'host' => '10.43.0.10',
+    },
 );
 
 #

@@ -11,10 +11,14 @@ use DateTime;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION = '1.7';
-our $DateTimeCreate = 1;
+our $VERSION        = '1.8';
+
+our $DateTimeCreate    = 1;
 our $FmtDate;
-our $EpochCreate = 0;
+our $EpochCreate       = 0;
+our $PruneRaw          = 0;
+our $PruneEmpty        = 0;
+our @PruneFields       = ();
 
 =head1 SYNOPSIS
 
@@ -38,8 +42,10 @@ parsed out.
     #       time            => 'HH::MM:SS',
     #       epoch           => 1361095933,
     #       datetime_str    => 'YYYY-MM-DD HH:MM:SS',
+    #       datet_str       => 'YYYY-MM-DD HH:MM:SS',
     #       datetime_obj    => new DateTime(), # If installed
     #       datetime_raw    => 'Feb 17 11:12:13'
+    #       date_raw        => 'Feb 17 11:12:13'
     #       date_raw        => 'Feb 17 11:12:13'
     #       host_raw        => 'hostname',  # Hostname as it appeared in the message
     #       host            => 'hostname',  # Hostname without domain
@@ -172,7 +178,7 @@ Readonly my %REGEXP => (
             ([+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
     )/x,
     host            => qr/^\s*(\S+)/,
-    cisco_hates_you => qr/^\s*:\s+/,
+    cisco_hates_you => qr/^\s*[0-9]*:\s+/,
     program_raw     => qr/^\s*([^:]+):/,
     program_name    => qr/^([^\[\(\ ]+)/,
     program_sub     => qr/\S+\(([^\)]+)\)/,
@@ -195,12 +201,36 @@ Usage:
 =head2 EpochCreate
 
 If this variable is set to 1, the number of seconds from UNIX epoch
-will be returned in the $m->{datetime_epoch} field.  If DateTimeCreate is
+will be returned in the $m->{epoch} field.  If DateTimeCreate is
 not set, the parser will use C<HTTP::Date> to perform the parsing
 
 Usage:
 
-  our $Parse::Syslog::Line::EpochCreate = 1;
+  $Parse::Syslog::Line::EpochCreate = 1;
+
+=head2 PruneRaw
+
+This variable defaults to 0, set to 1 to delete all keys in the return hash ending in "_raw"
+
+Usage:
+
+  $Parse::Syslog::Line::PruneRaw = 1;
+
+=head2 PruneEmpty
+
+This variable defaults to 0, set to 1 to delete all keys in the return hash which are undefined.
+
+Usage:
+
+  $Parse::Syslog::Line::PruneEmpty = 1;
+
+=head2 PruneFields
+
+This should be an array of fields you'd like to be removed from the hash reference.
+
+Usage:
+
+  @Parse::Syslog::Line::PruneFields = qw(date_str date_raw facility_int priority_int);
 
 =head1 FUNCTIONS
 
@@ -210,12 +240,19 @@ Returns a hash reference of syslog message parsed data.
 
 =cut
 
+my %_empty_msg = map { $_ => undef } qw(
+    preamble priority priority_int facility facility_int
+    datetime_raw date_raw date time date_str datetime_str datetime_obj epoch
+    host_raw host domain
+    program_raw program_name program_pid program_sub
+);
+
 sub parse_syslog_line {
     my ($raw_string) = @_;
 
-    my %msg = (
-        'message_raw'   => $raw_string,
-    );
+    # Initialize everything to undef
+    my %msg =  $PruneEmpty ? () : %_empty_msg;
+    $msg{message_raw} = $raw_string unless $PruneRaw;
 
     #
     # grab the preamble:
@@ -227,12 +264,6 @@ sub parse_syslog_line {
 
         @msg{qw(priority priority_int)} = @{ $priority }{qw(as_text as_int)};
         @msg{qw(facility facility_int)} = @{ $facility }{qw(as_text as_int)};
-
-    }
-    else {
-        foreach my $var (qw(preamble priority priority_int facility facility_int)) {
-            $msg{$var} = undef;
-        }
     }
 
     #
@@ -247,39 +278,20 @@ sub parse_syslog_line {
         $msg{date_raw} = $msg{datetime_raw};
 
         # Only parse the DatetTime if we're configured to do so
-        if( $DateTimeCreate and defined($msg{datetime_raw}) and length($msg{datetime_raw}) > 0 ) {
+        if( $DateTimeCreate ) {
             my $dt = DateTime::Format::HTTP->parse_datetime( $msg{datetime_raw} );
-            $msg{date}          = $dt->ymd('-');
-            $msg{time}          = $dt->hms;
-            $msg{epoch}         = $dt->epoch;
-            $msg{datetime_str}      = $dt->ymd('-') . ' ' . $dt->hms;
-            $msg{datetime_obj}  = $dt;
+            $msg{date}         = $dt->ymd('-');
+            $msg{time}         = $dt->hms;
+            $msg{epoch}        = $dt->epoch if $EpochCreate;
+            $msg{datetime_str} = $dt->ymd('-') . ' ' . $dt->hms;
+            $msg{datetime_obj} = $dt;
         }
-        elsif( $FmtDate and defined($msg{datetime_raw}) and length($msg{datetime_raw}) > 0 ) {
-            ($msg{date}, $msg{time}, $msg{epoch}, $msg{datetime_str}) = $FmtDate->($msg{datetime_raw});
-            $msg{datetime_obj} = undef;
+        elsif( $FmtDate && ref $FmtDate eq 'CODE' ) {
+            @msg{qw(date time epoch datetime_str)} = $FmtDate->($msg{datetime_raw});
         }
-        elsif ($EpochCreate) {
-            if( defined $msg{datetime_raw} && length($msg{datetime_raw}) > 0 ) {
-                $msg{epoch} = HTTP::Date::str2time($msg{datetime_raw});
-                $msg{datetime_str}   = HTTP::Date::time2iso($msg{epoch});
-            }
-            else {
-                foreach my $var (qw(epoch datetime_str datetime_obj)) {
-                    $msg{$var} = undef;
-                }
-            }
-        }
-        else {
-            foreach my $var (qw(date time epoch date_str datetime_obj)) {
-                $msg{$var} = undef;
-            }
-            if ($EpochCreate && $msg{datetime_obj}) {
-                $msg{epoch} = $msg{datetime_obj}->epoch;
-            }
-            else {
-                $msg{epoch} = undef;
-            }
+        elsif( $EpochCreate ) {
+            $msg{epoch}        = HTTP::Date::str2time($msg{datetime_raw});
+            $msg{datetime_str} = HTTP::Date::time2iso($msg{epoch});
         }
         $msg{date_str} = $msg{datetime_str} if exists $msg{datetime_str};
     }
@@ -292,18 +304,12 @@ sub parse_syslog_line {
         if( defined $ip && length $ip ) {
             $msg{host_raw} = $hostStr;
             $msg{host} = $ip;
-            $msg{domain} = undef;
         }
         elsif( length $hostStr ) {
             my ($host,$domain) = split /\./, $hostStr, 2;
             $msg{host_raw} = $hostStr;
             $msg{host} = $host;
             $msg{domain} = $domain;
-        }
-    }
-    else {
-        foreach my $var (qw(host host_raw domain)) {
-            $msg{$var} = undef;
         }
     }
     if( $raw_string =~ s/$REGEXP{cisco_hates_you}// ) {
@@ -322,20 +328,23 @@ sub parse_syslog_line {
                 ($msg{$var}) = ($progStr =~ /$REGEXP{$var}/);
             }
         }
-        else {
-            if ( $raw_string =~ s/$REGEXP{program_raw}// ) {
-                $msg{program_name} = $msg{program_raw} = $1;
-            }
-        }
-    }
-    foreach my $var (qw(program_raw program_name program_pid program_sub)) {
-        $msg{$var} = undef unless exists $msg{$var};
     }
 
     # Strip leading spaces from the string
     $raw_string =~ s/^\s+//;
     $msg{content} = $raw_string;
     $msg{message} = defined $msg{program_raw} ? "$msg{program_raw}: $msg{content}" : $msg{content};
+
+    if( $PruneRaw ) {
+        delete $msg{$_} for grep { $_ =~ /_raw$/ } keys %msg;
+    }
+    if( $PruneEmpty ) {
+        delete $msg{$_} for grep { !defined $msg{$_} } keys %msg;
+    }
+    if( @PruneFields ) {
+        no warnings;
+        delete $msg{$_} for @PruneFields;
+    }
 
     #
     # Return our hash reference!
@@ -399,6 +408,9 @@ sub preamble_facility {
 
 }
 
+1; # End of Parse::Syslog::Line
+__END__
+
 =head1 DEVELOPMENT
 
 This module is developed with Dist::Zilla.  To build from the repository, use Dist::Zilla:
@@ -449,4 +461,3 @@ Contribution of patch to support custom date parsing function
 
 =back
 
-1; # End of Parse::Syslog::Line

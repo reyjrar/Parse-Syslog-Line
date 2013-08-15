@@ -1,4 +1,8 @@
 Revision history for Parse-Syslog-Line
+1.9     Aug 15 2013 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Remove unnecessary use of Readonly
+        - Improve performance 50%
+
 1.8     Aug 13 2013 - Brad Lhotsky <brad@divisionbyzero.net>
         - Added support for Cisco Catalyst syslog-ng messages
         - Added $PruneRaw, $PruneEmpty, and @PruneFields to allow

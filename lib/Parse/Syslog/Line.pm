@@ -6,12 +6,12 @@ use warnings;
 use strict;
 
 use Exporter;
-use Readonly;
+use Const::Fast;
 use DateTime;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION        = '1.9';
+our $VERSION        = '2.0';
 
 our $DateTimeCreate    = 1;
 our $FmtDate;
@@ -107,17 +107,17 @@ my %INT_FACILITY = (
     'launchd'       => 24 << 3,
 );
 
-Readonly our %LOG_PRIORITY => (
+const our %LOG_PRIORITY => (
     %INT_PRIORITY,
     reverse(%INT_PRIORITY),
 );
 
-Readonly our %LOG_FACILITY => (
+const our %LOG_FACILITY => (
     %INT_FACILITY,
     reverse(%INT_FACILITY),
 );
 
-Readonly our %CONV_MASK => (
+const our %CONV_MASK => (
     priority        => 0x07,
     facility        => 0x03f8,
 );

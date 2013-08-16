@@ -1,4 +1,8 @@
 Revision history for Parse-Syslog-Line
+2.0     Aug 16 2013 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Replace Readonly with Const::Fast
+        - Improve performance another 30%
+
 1.9     Aug 15 2013 - Brad Lhotsky <brad@divisionbyzero.net>
         - Remove unnecessary use of Readonly
         - Improve performance 50%

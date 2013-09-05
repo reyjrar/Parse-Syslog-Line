@@ -1,4 +1,7 @@
 Revision history for Parse-Syslog-Line
+2.1     Sep  5 2013 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Added support for Cisco's NTP indicators
+
 2.0     Aug 16 2013 - Brad Lhotsky <brad@divisionbyzero.net>
         - Replace Readonly with Const::Fast
         - Improve performance another 30%

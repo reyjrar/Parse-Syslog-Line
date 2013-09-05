@@ -11,7 +11,7 @@ use DateTime;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION        = '2.0';
+our $VERSION        = '2.1';
 
 our $DateTimeCreate    = 1;
 our $FmtDate;
@@ -57,6 +57,7 @@ parsed out.
     #       content         => 'the rest of the message'
     #       message         => 'program[pid]: the rest of the message',
     #       message_raw     => 'The message as it was passed',
+    #       ntp             => 'ok',           # Only set for Cisco messages
     # };
     ...
 
@@ -162,15 +163,16 @@ my %REGEXP = (
             \s+                             # Date Separator: spaces
             [0-9]{1,2}(\:[0-9]{2}){1,2}     # Time: HH:MM or HH:MM:SS
     )/x,
-    date_long => qr/^(
-            ([0-9]{4}\s+)?                  # Year: Because, Cisco
+    date_long => qr/^
+            (?:[0-9]{4}\s+)?                # Year: Because, Cisco
+            ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
             [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
             \s+                             # Date Separator: spaces
-            [0-9]{1,2}(\:[0-9]{2}){1,2}     # Time: HH:MM or HH:MM:SS
-            (\.[0-9]{3})?                   # Time: .DDD ms resolution
-            (\s+[A-Z]{3,4})?                # Timezone, ZZZ or ZZZZ
-            (\:?)                           # Cisco adds a : after the second timestamp
-    )/x,
+            [0-9]{1,2}(?:\:[0-9]{2}){1,2}   # Time: HH:MM or HH:MM:SS
+            (?:\.[0-9]{3})?                 # Time: .DDD ms resolution
+            (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
+            (?:\:?)                         # Cisco adds a : after the second timestamp
+    /x,
     date_iso8601    => qr/^(
             [0-9]{4}(\-[0-9]{2}){2}     # Date YYYY-MM-DD
             (\s|T)                      # Date Separator T or ' '
@@ -314,7 +316,17 @@ sub parse_syslog_line {
     }
     if( $raw_string =~ s/$REGEXP{cisco_hates_you}// ) {
         # Yes, Cisco adds a second timestamp to it's messages, because it hates you.
-        $raw_string =~ s/$REGEXP{date_long}//;
+        if( $raw_string =~ s/$REGEXP{date_long}// ) {
+            # Cisco encodes the status of NTP in the second datestamp, so let's pass it back
+            if ( my $ntp = $1 ) {
+                $msg{ntp} = $ntp eq '.' ? 'out of sync'
+                          : $ntp eq '*' ? 'not configured'
+                          : 'unknown';
+            }
+            else {
+                $msg{ntp} = 'ok';
+            }
+        }
     }
 
     #

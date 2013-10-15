@@ -7,17 +7,17 @@ use strict;
 
 use Exporter;
 use Const::Fast;
-use DateTime;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION        = '2.1';
+our $VERSION        = '2.2';
 
 our $DateTimeCreate    = 1;
 our $FmtDate;
 our $EpochCreate       = 0;
 our $PruneRaw          = 0;
 our $PruneEmpty        = 0;
+our $RegexSet          = 'stable';
 our @PruneFields       = ();
 
 =head1 SYNOPSIS
@@ -157,37 +157,63 @@ our @EXPORT_TAGS = (
 
 # Regex to Extract Data
 my %REGEXP = (
-    preamble        => qr/^\<(\d+)\>/,
-    date            => qr/^(
-            [a-zA-Z]{3}\s+[0-9]+            # Date: Mon  9
-            \s+                             # Date Separator: spaces
-            [0-9]{1,2}(\:[0-9]{2}){1,2}     # Time: HH:MM or HH:MM:SS
-    )/x,
-    date_long => qr/^
-            (?:[0-9]{4}\s+)?                # Year: Because, Cisco
-            ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
-            [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
-            \s+                             # Date Separator: spaces
-            [0-9]{1,2}(?:\:[0-9]{2}){1,2}   # Time: HH:MM or HH:MM:SS
-            (?:\.[0-9]{3})?                 # Time: .DDD ms resolution
-            (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
-            (?:\:?)                         # Cisco adds a : after the second timestamp
-    /x,
-    date_iso8601    => qr/^(
-            [0-9]{4}(\-[0-9]{2}){2}     # Date YYYY-MM-DD
-            (\s|T)                      # Date Separator T or ' '
-            [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
-            ([+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
-    )/x,
-    host            => qr/^\s*(\S+)/,
-    cisco_hates_you => qr/^\s*[0-9]*:\s+/,
-    program_raw     => qr/^\s*([^:]+):/,
-    program_name    => qr/^([^\[\(\ ]+)/,
-    program_sub     => qr/\S+\(([^\)]+)\)/,
-    program_pid     => qr/\S+\[([^\]]+)\]/,
+    stable => {
+        preamble        => qr/^\<(\d+)\>/,
+        date            => qr/^(
+                [a-zA-Z]{3}\s+[0-9]+            # Date: Mon  9
+                \s+                             # Date Separator: spaces
+                [0-9]{1,2}(\:[0-9]{2}){1,2}     # Time: HH:MM or HH:MM:SS
+        )/x,
+        date_long => qr/^
+                (?:[0-9]{4}\s+)?                # Year: Because, Cisco
+                ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
+                [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
+                \s+                             # Date Separator: spaces
+                [0-9]{1,2}(?:\:[0-9]{2}){1,2}   # Time: HH:MM or HH:MM:SS
+                (?:\.[0-9]{3})?                 # Time: .DDD ms resolution
+                (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
+                (?:\:?)                         # Cisco adds a : after the second timestamp
+        /x,
+        date_iso8601    => qr/^(
+                [0-9]{4}(\-[0-9]{2}){2}     # Date YYYY-MM-DD
+                (\s|T)                      # Date Separator T or ' '
+                [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
+                ([+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
+        )/x,
+        host            => qr/^\s*(\S+)/,
+        cisco_hates_you => qr/^\s*[0-9]*:\s+/,
+        program_raw     => qr/^\s*([^:]+):/,
+        program_name    => qr/^([^\[\(\ ]+)/,
+        program_sub     => qr/\S+\(([^\)]+)\)/,
+        program_pid     => qr/\S+\[([^\]]+)\]/,
+    },
+    devel => {
+        preamble        => qr/^\<([0-9]+)\>/,
+        date            => qr/^([a-zA-Z]{3} +[0-9]+ +[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
+        date_long => qr/^
+                (?:[0-9]{4}\s+)?                # Year: Because, Cisco
+                ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
+                [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
+                \s+                             # Date Separator: spaces
+                [0-9]{1,2}(?:\:[0-9]{2}){1,2}   # Time: HH:MM or HH:MM:SS
+                (?:\.[0-9]{3})?                 # Time: .DDD ms resolution
+                (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
+                (?:\:?)                         # Cisco adds a : after the second timestamp
+        /x,
+        date_iso8601    => qr/^(
+                [0-9]{4}(?:\-[0-9]{2}){2}     # Date YYYY-MM-DD
+                (?:\s|T)                      # Date Separator T or ' '
+                [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
+                (?:[+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
+        )/x,
+        host            => qr/^\s*(\S+)/,
+        cisco_hates_you => qr/^\s*[0-9]*:\s+/,
+        program_raw     => qr/^\s*([^:]+):/,
+        program_name    => qr/^([^\[\(\ ]+)/,
+        program_sub     => qr/\(([^\)]+)\)/,
+        program_pid     => qr/\[([^\]]+)\]/,
+    },
 );
-
-# 2013-08-09T11:09:36+02:00 hostname.company.tld : 2013 Aug  9 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)
 
 =head1 VARIABLES
 
@@ -234,6 +260,16 @@ Usage:
 
   @Parse::Syslog::Line::PruneFields = qw(date_str date_raw facility_int priority_int);
 
+=head2 RegexSet
+
+Allows the use of different regex sets, the default is stable.  This is mostly a developer level
+feature to allow easy benchmarking of features against previous release.
+
+Usage:
+
+  $Parse::Syslog::Line::RegexSet = 'devel';
+
+
 =head1 FUNCTIONS
 
 =head2 parse_syslog_line
@@ -252,13 +288,16 @@ my %_empty_msg = map { $_ => undef } qw(
 sub parse_syslog_line {
     my ($raw_string) = @_;
 
+    # Verify we have a valid RegexSet
+    die "Invalid RegexSet '$RegexSet'" unless exists $REGEXP{$RegexSet};
+
     # Initialize everything to undef
     my %msg =  $PruneEmpty ? () : %_empty_msg;
     $msg{message_raw} = $raw_string unless $PruneRaw;
 
     #
     # grab the preamble:
-    if( $raw_string =~ s/$REGEXP{preamble}// ) {
+    if( $raw_string =~ s/$REGEXP{$RegexSet}->{preamble}// ) {
         $msg{preamble} = $1;
 
         my $priority = preamble_priority( $msg{preamble} );
@@ -270,10 +309,10 @@ sub parse_syslog_line {
 
     #
     # Handle Date/Time
-    if( $raw_string =~ s/$REGEXP{date}//) {
+    if( $raw_string =~ s/$REGEXP{$RegexSet}->{date}//) {
         $msg{datetime_raw} = $1;
     }
-    elsif( $raw_string =~ s/$REGEXP{date_iso8601}//) {
+    elsif( $raw_string =~ s/$REGEXP{$RegexSet}->{date_iso8601}//) {
         $msg{datetime_raw} = $1;
     }
     if( exists $msg{datetime_raw} && length $msg{datetime_raw} ) {
@@ -300,7 +339,7 @@ sub parse_syslog_line {
 
     #
     # Host Information:
-    if( $raw_string =~ s/$REGEXP{host}// ) {
+    if( $raw_string =~ s/$REGEXP{$RegexSet}->{host}// ) {
         my $hostStr = $1;
         my($ip) = ($hostStr =~ /($RE{IPv4})/);
         if( defined $ip && length $ip ) {
@@ -314,9 +353,9 @@ sub parse_syslog_line {
             $msg{domain} = $domain;
         }
     }
-    if( $raw_string =~ s/$REGEXP{cisco_hates_you}// ) {
+    if( $raw_string =~ s/$REGEXP{$RegexSet}->{cisco_hates_you}// ) {
         # Yes, Cisco adds a second timestamp to it's messages, because it hates you.
-        if( $raw_string =~ s/$REGEXP{date_long}// ) {
+        if( $raw_string =~ s/$REGEXP{$RegexSet}->{date_long}// ) {
             # Cisco encodes the status of NTP in the second datestamp, so let's pass it back
             if ( my $ntp = $1 ) {
                 $msg{ntp} = $ntp eq '.' ? 'out of sync'
@@ -331,13 +370,13 @@ sub parse_syslog_line {
 
     #
     # Parse the Program portion
-    if( $raw_string =~ s/$REGEXP{program_raw}// ) {
+    if( $raw_string =~ s/$REGEXP{$RegexSet}->{program_raw}// ) {
         my $progStr = $1;
         $progStr =~ s/\s+$//g;
         if( defined $progStr && length $progStr) {
             $msg{program_raw} = $progStr;
             foreach my $var (qw(program_name program_pid program_sub)) {
-                ($msg{$var}) = ($progStr =~ /$REGEXP{$var}/);
+                ($msg{$var}) = ($progStr =~ /$REGEXP{$RegexSet}->{$var}/);
             }
         }
     }

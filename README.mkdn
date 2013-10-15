@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 2.1
+version 2.2
 
 # SYNOPSIS
 
@@ -106,6 +106,15 @@ Usage:
 
     @Parse::Syslog::Line::PruneFields = qw(date_str date_raw facility_int priority_int);
 
+## RegexSet
+
+Allows the use of different regex sets, the default is stable.  This is mostly a developer level
+feature to allow easy benchmarking of features against previous release.
+
+Usage:
+
+    $Parse::Syslog::Line::RegexSet = 'devel';
+
 # FUNCTIONS
 
 ## parse\_syslog\_line
@@ -144,37 +153,37 @@ This module is developed with Dist::Zilla.  To build from the repository, use Di
 
 - Github Page
 
-[http://github.com/reyjrar/Parse-Syslog-Line](http://github.com/reyjrar/Parse-Syslog-Line)
+    [http://github.com/reyjrar/Parse-Syslog-Line](http://github.com/reyjrar/Parse-Syslog-Line)
 
 - AnnoCPAN: Annotated CPAN documentation
 
-[http://annocpan.org/dist/Parse-Syslog-Line](http://annocpan.org/dist/Parse-Syslog-Line)
+    [http://annocpan.org/dist/Parse-Syslog-Line](http://annocpan.org/dist/Parse-Syslog-Line)
 
 - CPAN Ratings
 
-[http://cpanratings.perl.org/d/Parse-Syslog-Line](http://cpanratings.perl.org/d/Parse-Syslog-Line)
+    [http://cpanratings.perl.org/d/Parse-Syslog-Line](http://cpanratings.perl.org/d/Parse-Syslog-Line)
 
 - RT: CPAN's request tracker
 
-[http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line](http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line)
+    [http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line](http://rt.cpan.org/NoAuth/Bugs.html?Dist=Parse-Syslog-Line)
 
 - Search CPAN
 
-[http://search.cpan.org/dist/Parse-Syslog-Line](http://search.cpan.org/dist/Parse-Syslog-Line)
+    [http://search.cpan.org/dist/Parse-Syslog-Line](http://search.cpan.org/dist/Parse-Syslog-Line)
 
 # ACKNOWLEDGEMENTS
 
 - Mattia Barbon
 
-Contribution of patch to support faster HTTP::Date routines
+    Contribution of patch to support faster HTTP::Date routines
 
 - Alexander Hartmaier
 
-Contribution of log samples for Cisco devices and testing
+    Contribution of log samples for Cisco devices and testing
 
 - Shawn Wilson
 
-Contribution of patch to support custom date parsing function
+    Contribution of patch to support custom date parsing function
 
 # AUTHOR
 

@@ -304,13 +304,16 @@ my %resps = (
 
 #
 # Remove DateTimeObject because it's large.
-foreach my $name (keys %msgs) {
-	my $msg = parse_syslog_line($msgs{$name});
-	delete $msg->{datetime_obj};
-    if ( !exists $resps{$name} ) {
-        diag( Dumper $msg );
+foreach my $set (qw(stable devel)) {
+    $Parse::Syslog::Line::RegexSet = $set;
+    foreach my $name (keys %msgs) {
+        my $msg = parse_syslog_line($msgs{$name});
+        delete $msg->{datetime_obj};
+        if ( !exists $resps{$name} ) {
+            diag( Dumper $msg );
+        }
+        is_deeply( $msg, $resps{$name}, "$name ($set)" ) || diag(Dumper $msg);
     }
-	is_deeply( $msg, $resps{$name}, $name ) || diag(Dumper $msg);
 }
 
 sub parse_func {

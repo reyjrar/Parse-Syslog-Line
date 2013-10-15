@@ -20,7 +20,11 @@ my @msgs = (
 $Parse::Syslog::Line::DateTimeCreate = 0;
 $Parse::Syslog::Line::EpochCreate    = 0;
 
-cmpthese(50_000, {
+my $count = 50_000;
+
+print "Running $count iterations against Devel/Stable regexes\n";
+
+cmpthese($count, {
     Development => sub {
         local $Parse::Syslog::Line::RegexSet = 'devel';
         parse_syslog_line($_) for @msgs

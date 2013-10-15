@@ -20,7 +20,7 @@ my @msgs = (
     q|2013-08-09T11:09:36+02:00 hostname.company.tld : 2013 Aug  9 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)|,
 );
 
-my $count = 5_000;
+my $count = 20_000;
 my $start = [gettimeofday];
 my $total = $count * @msgs;
 for( 1..$count ) {

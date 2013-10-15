@@ -10,7 +10,7 @@ use Const::Fast;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION        = '2.2';
+our $VERSION        = '2.3';
 
 our $DateTimeCreate    = 1;
 our $FmtDate;
@@ -178,7 +178,7 @@ my %REGEXP = (
         )/x,
         host            => qr/^\s*(\S+)/,
         cisco_hates_you => qr/^\s*[0-9]*:\s+/,
-        program_raw     => qr/^\s*([^:]+):/,
+        program_raw     => qr/^\s*([^:]+):\s*/,
         program_name    => qr/^([^\[\(\ ]+)/,
         program_sub     => qr/\(([^\)]+)\)/,
         program_pid     => qr/\[([^\]]+)\]/,
@@ -204,7 +204,7 @@ my %REGEXP = (
         )/x,
         host            => qr/^\s*(\S+)/,
         cisco_hates_you => qr/^\s*[0-9]*:\s+/,
-        program_raw     => qr/^\s*([^:]+):/,
+        program_raw     => qr/^\s*([^:]+):\s*/,
         program_name    => qr/^([^\[\(\ ]+)/,
         program_sub     => qr/\(([^\)]+)\)/,
         program_pid     => qr/\[([^\]]+)\]/,
@@ -294,13 +294,16 @@ sub parse_syslog_line {
     #
     # grab the preamble:
     if( $raw_string =~ s/$REGEXP{$RegexSet}->{preamble}// ) {
-        $msg{preamble} = $1;
+        # Cast to integer
+        $msg{preamble} = int $1;
 
-        my $priority = preamble_priority( $msg{preamble} );
-        my $facility = preamble_facility( $msg{preamble} );
+        # Extract Integers
+        $msg{priority_int} = $msg{preamble} & $CONV_MASK{priority};
+        $msg{facility_int} = $msg{preamble} & $CONV_MASK{facility};
 
-        @msg{qw(priority priority_int)} = @{ $priority }{qw(as_text as_int)};
-        @msg{qw(facility facility_int)} = @{ $facility }{qw(as_text as_int)};
+        # Lookups
+        $msg{priority} = $LOG_PRIORITY{ $msg{priority_int} };
+        $msg{facility} = $LOG_FACILITY{ $msg{facility_int} };
     }
 
     #
@@ -368,17 +371,20 @@ sub parse_syslog_line {
     # Parse the Program portion
     if( $raw_string =~ s/$REGEXP{$RegexSet}->{program_raw}// ) {
         my $progStr = $1;
-        $progStr =~ s/\s+$//g;
+        chomp($progStr);
         if( defined $progStr && length $progStr) {
             $msg{program_raw} = $progStr;
-            foreach my $var (qw(program_name program_pid program_sub)) {
-                ($msg{$var}) = ($progStr =~ /$REGEXP{$RegexSet}->{$var}/);
+            if( ($msg{program_name}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_name}/) ) {
+                if (length $msg{program_name} != length $msg{program_raw} ) {
+                    foreach my $var (qw(program_pid program_sub)) {
+                        last if ($msg{$var}) = ($progStr =~ /$REGEXP{$RegexSet}->{$var}/);
+                    }
+                }
             }
         }
     }
 
-    # Strip leading spaces from the string
-    $raw_string =~ s/^\s+//;
+    # The left overs should be the message
     $msg{content} = $raw_string;
     $msg{message} = defined $msg{program_raw} ? "$msg{program_raw}: $msg{content}" : $msg{content};
 
@@ -412,9 +418,7 @@ a hash reference as such:
 =cut
 
 sub preamble_priority {
-    my $preamble = shift;
-
-    $preamble =~ s/\D+//g;
+    my $preamble = int shift;
 
     my %hash = (
         preamble => $preamble,
@@ -440,9 +444,7 @@ a hash reference as such:
 =cut
 
 sub preamble_facility {
-    my $preamble = shift;
-
-    $preamble =~ s/\D+//g;
+    my $preamble = int shift;
 
     my %hash = (
         preamble => $preamble,

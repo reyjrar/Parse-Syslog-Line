@@ -159,11 +159,7 @@ our @EXPORT_TAGS = (
 my %REGEXP = (
     stable => {
         preamble        => qr/^\<(\d+)\>/,
-        date            => qr/^(
-                [a-zA-Z]{3}\s+[0-9]+            # Date: Mon  9
-                \s+                             # Date Separator: spaces
-                [0-9]{1,2}(\:[0-9]{2}){1,2}     # Time: HH:MM or HH:MM:SS
-        )/x,
+        date            => qr/^([a-zA-Z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
         date_long => qr/^
                 (?:[0-9]{4}\s+)?                # Year: Because, Cisco
                 ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
@@ -184,12 +180,12 @@ my %REGEXP = (
         cisco_hates_you => qr/^\s*[0-9]*:\s+/,
         program_raw     => qr/^\s*([^:]+):/,
         program_name    => qr/^([^\[\(\ ]+)/,
-        program_sub     => qr/\S+\(([^\)]+)\)/,
-        program_pid     => qr/\S+\[([^\]]+)\]/,
+        program_sub     => qr/\(([^\)]+)\)/,
+        program_pid     => qr/\[([^\]]+)\]/,
     },
     devel => {
-        preamble        => qr/^\<([0-9]+)\>/,
-        date            => qr/^([a-zA-Z]{3} +[0-9]+ +[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
+        preamble        => qr/^\<(\d+)\>/,
+        date            => qr/^([a-zA-Z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
         date_long => qr/^
                 (?:[0-9]{4}\s+)?                # Year: Because, Cisco
                 ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync

@@ -1,4 +1,8 @@
 Revision history for Perl module Parse::Syslog::Line
+2.4     2013-10-24 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Merge pull request for documentation fixes
+        - Merge pull request to add support for FreeBSD messages
+          without hostname
 
 2.3     2013-10-16 - Brad Lhotsky <brad@divisionbyzero.net>
         - Better regexes

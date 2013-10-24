@@ -10,7 +10,7 @@ use Const::Fast;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION        = '2.3';
+our $VERSION        = '2.4';
 
 our $DateTimeCreate    = 1;
 our $FmtDate;

@@ -176,7 +176,7 @@ my %REGEXP = (
                 [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
                 ([+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
         )/x,
-        host            => qr/^\s*(\S+)/,
+        host            => qr/^\s*([^:\s]+)(?=\s)/,
         cisco_hates_you => qr/^\s*[0-9]*:\s+/,
         program_raw     => qr/^\s*([^:]+):\s*/,
         program_name    => qr/^([^\[\(\ ]+)/,
@@ -202,7 +202,7 @@ my %REGEXP = (
                 [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
                 (?:[+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
         )/x,
-        host            => qr/^\s*(\S+)/,
+        host            => qr/^\s*([^:\s]+)(?=\s)/,
         cisco_hates_you => qr/^\s*[0-9]*:\s+/,
         program_raw     => qr/^\s*([^:]+):\s*/,
         program_name    => qr/^([^\[\(\ ]+)/,

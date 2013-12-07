@@ -22,7 +22,7 @@ $Parse::Syslog::Line::EpochCreate    = 0;
 
 my $count = 50_000;
 
-print "Running $count iterations against Devel/Stable regexes\n";
+printf "Running %d iterations on %d messages against Devel/Stable regexes\n", $count, scalar(@msgs);
 
 cmpthese($count, {
     Development => sub {

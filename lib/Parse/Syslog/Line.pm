@@ -10,9 +10,10 @@ use Const::Fast;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION        = '2.4';
+our $VERSION        = '2.5';
 
 our $DateTimeCreate    = 1;
+our $ExtractProgram    = 1;
 our $FmtDate;
 our $EpochCreate       = 0;
 our $PruneRaw          = 0;
@@ -176,7 +177,7 @@ my %REGEXP = (
                 [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
                 ([+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
         )/x,
-        host            => qr/^\s*([^:\s]+)(?=\s)/,
+        host            => qr/^\s*([^:\s]+)\s+/,
         cisco_hates_you => qr/^\s*[0-9]*:\s+/,
         program_raw     => qr/^\s*([^:]+):\s*/,
         program_name    => qr/^([^\[\(\ ]+)/,
@@ -202,7 +203,7 @@ my %REGEXP = (
                 [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
                 (?:[+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
         )/x,
-        host            => qr/^\s*([^:\s]+)(?=\s)/,
+        host            => qr/^\s*([^:\s]+)\s+/,
         cisco_hates_you => qr/^\s*[0-9]*:\s+/,
         program_raw     => qr/^\s*([^:]+):\s*/,
         program_name    => qr/^([^\[\(\ ]+)/,
@@ -212,6 +213,21 @@ my %REGEXP = (
 );
 
 =head1 VARIABLES
+
+=head2 ExtractProgram
+
+If this variable is set to 1 (the default), parse_syslog_line() will try it's
+best to extract a "program" field from the input.  This is the most expensive
+set of regex in the module, so if you don't need that pre-parsed, you can speed
+the module up significantly by setting this variable.
+
+Vendors who do proprietary non-sense with their syslog formats are to blame for
+this setting.
+
+
+Usage:
+
+  $Parse::Syslog::Line::ExtractProgram = 0;
 
 =head2 DateTimeCreate
 
@@ -285,7 +301,7 @@ sub parse_syslog_line {
     my ($raw_string) = @_;
 
     # Verify we have a valid RegexSet
-    die "Invalid RegexSet '$RegexSet'" unless exists $REGEXP{$RegexSet};
+    die "Invalid RegexSet '$RegexSet', valid are: ". join(", ", sort keys %REGEXP) unless exists $REGEXP{$RegexSet};
 
     # Initialize everything to undef
     my %msg =  $PruneEmpty ? () : %_empty_msg;
@@ -293,7 +309,7 @@ sub parse_syslog_line {
 
     #
     # grab the preamble:
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{preamble}// ) {
+    if( $raw_string =~ s/$REGEXP{$RegexSet}->{preamble}//o ) {
         # Cast to integer
         $msg{preamble} = int $1;
 
@@ -308,10 +324,10 @@ sub parse_syslog_line {
 
     #
     # Handle Date/Time
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{date}//) {
+    if( $raw_string =~ s/$REGEXP{$RegexSet}->{date}//o) {
         $msg{datetime_raw} = $1;
     }
-    elsif( $raw_string =~ s/$REGEXP{$RegexSet}->{date_iso8601}//) {
+    elsif( $raw_string =~ s/$REGEXP{$RegexSet}->{date_iso8601}//o) {
         $msg{datetime_raw} = $1;
     }
     if( exists $msg{datetime_raw} && length $msg{datetime_raw} ) {
@@ -338,7 +354,7 @@ sub parse_syslog_line {
 
     #
     # Host Information:
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{host}// ) {
+    if( $raw_string =~ s/$REGEXP{$RegexSet}->{host}//o ) {
         my $hostStr = $1;
         my($ip) = ($hostStr =~ /($RE{IPv4})/);
         if( defined $ip && length $ip ) {
@@ -352,9 +368,9 @@ sub parse_syslog_line {
             $msg{domain} = $domain;
         }
     }
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{cisco_hates_you}// ) {
+    if( $raw_string =~ s/$REGEXP{$RegexSet}->{cisco_hates_you}//o ) {
         # Yes, Cisco adds a second timestamp to it's messages, because it hates you.
-        if( $raw_string =~ s/$REGEXP{$RegexSet}->{date_long}// ) {
+        if( $raw_string =~ s/$REGEXP{$RegexSet}->{date_long}//o ) {
             # Cisco encodes the status of NTP in the second datestamp, so let's pass it back
             if ( my $ntp = $1 ) {
                 $msg{ntp} = $ntp eq '.' ? 'out of sync'
@@ -369,12 +385,12 @@ sub parse_syslog_line {
 
     #
     # Parse the Program portion
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{program_raw}// ) {
+    if( $ExtractProgram && $raw_string =~ s/$REGEXP{$RegexSet}->{program_raw}//o ) {
         my $progStr = $1;
         chomp($progStr);
         if( defined $progStr && length $progStr) {
             $msg{program_raw} = $progStr;
-            if( ($msg{program_name}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_name}/) ) {
+            if( ($msg{program_name}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_name}/o) ) {
                 if (length $msg{program_name} != length $msg{program_raw} ) {
                     foreach my $var (qw(program_pid program_sub)) {
                         last if ($msg{$var}) = ($progStr =~ /$REGEXP{$RegexSet}->{$var}/);
@@ -382,6 +398,9 @@ sub parse_syslog_line {
                 }
             }
         }
+    }
+    else {
+        $raw_string =~ s/^\s+//o;
     }
 
     # The left overs should be the message

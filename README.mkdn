@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 2.4
+version 2.5
 
 # SYNOPSIS
 
@@ -62,6 +62,20 @@ Optional Exports:
          %LOG_PRIORITY
 
 # VARIABLES
+
+## ExtractProgram
+
+If this variable is set to 1 (the default), parse\_syslog\_line() will try it's
+best to extract a "program" field from the input.  This is the most expensive
+set of regex in the module, so if you don't need that pre-parsed, you can speed
+the module up significantly by setting this variable.
+
+Vendors who do proprietary non-sense with their syslog formats are to blame for
+this setting.
+
+Usage:
+
+    $Parse::Syslog::Line::ExtractProgram = 0;
 
 ## DateTimeCreate
 

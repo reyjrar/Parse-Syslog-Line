@@ -1,4 +1,11 @@
 Revision history for Perl module Parse::Syslog::Line
+2.5     2013-12-07 - Brad Lhotsky <brad@divisionbyzero.net>
+        - $Parse::Syslog::Line::ExtractProgram added to disable parsing
+          of the program field for environments with a lot of ridiculous
+          Cisco equipment.
+        - Introduce the "o" modifier for regexes which won't change, 13%
+          performance improvement.
+
 2.4     2013-10-24 - Brad Lhotsky <brad@divisionbyzero.net>
         - Merge pull request for documentation fixes
         - Merge pull request to add support for FreeBSD messages

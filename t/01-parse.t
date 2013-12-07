@@ -330,7 +330,7 @@ my %resps = (
 #
 # Remove DateTimeObject because it's large.
 foreach my $set (qw(stable devel)) {
-    $Parse::Syslog::Line::RegexSet = $set;
+    local $Parse::Syslog::Line::RegexSet = $set;
     foreach my $name (keys %msgs) {
         my $msg = parse_syslog_line($msgs{$name});
         delete $msg->{datetime_obj};
@@ -340,6 +340,20 @@ foreach my $set (qw(stable devel)) {
         is_deeply( $msg, $resps{$name}, "$name ($set)" ) || diag(Dumper $msg);
     }
 }
+
+# Disable Program extraction
+do {
+    local $Parse::Syslog::Line::ExtractProgram = 0;
+    foreach my $name (keys %msgs) {
+        my $msg = parse_syslog_line($msgs{$name});
+        my %expected = %{ $resps{$name} };
+        delete $msg->{datetime_obj};
+        $expected{content} = $expected{program_raw} . ': ' . $expected{content};
+        $expected{$_} = undef for qw(program_raw program_name program_sub program_pid);
+        is_deeply( $msg, \%expected, "$name (no extract program)" ) || diag(Dumper $msg);
+    }
+};
+
 
 sub parse_func {
     my ($date) = @_;

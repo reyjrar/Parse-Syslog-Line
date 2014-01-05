@@ -1,4 +1,7 @@
 Revision history for Perl module Parse::Syslog::Line
+2.6     2014-01-05 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Fix test suite with year roll-over issues.
+
 2.5     2013-12-07 - Brad Lhotsky <brad@divisionbyzero.net>
         - $Parse::Syslog::Line::ExtractProgram added to disable parsing
           of the program field for environments with a lot of ridiculous

@@ -1,4 +1,8 @@
 Revision history for Perl module Parse::Syslog::Line
+2.7     2014-05-11 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Bugifx with Cisco datetime formats
+          https://rt.cpan.org/Ticket/Display.html?id=95469
+
 2.6     2014-01-05 - Brad Lhotsky <brad@divisionbyzero.net>
         - Fix test suite with year roll-over issues.
 

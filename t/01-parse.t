@@ -26,6 +26,7 @@ my %msgs = (
     'Cisco Catalyst'         => q|<188>Jan 1 00:10:02 10.43.0.10 1813056: Jan 1 00:15:02: %C4K_EBM-4-HOSTFLAPPING: Host 00:1B:21:4B:7B:5D in vlan 1 is flapping between port Gi6/37 and port Gi6/38|,
     'Cisco NTP No Sync'      => q|<187>Jan 1 14:58:58 fqdn.tld 6951: .Jan 1 14:58:57: %LINK-3-UPDOWN: Interface BRI0:1, changed state to down|,
     'Cisco NTP Unconfigured' => q|<189>Jan 1 12:22:26 1.2.3.4 5971: *Jan 1 02:54:25: %SYS-5-CONFIG_I: Configured from console by vty0 (10.100.0.68)|,
+    'Cisco Date Insanity'    => q|<189>May 8 19:12:19 router.company.tld 11815005: May 8 2014 19:12:18.454 CET: %CRYPTO-5-IPSEC_SETUP_FAILURE: IPSEC SETUP FAILED for local:1.2.3.4 local_id:1.2.3.4 remote:4.5.6.7 remote_id:4.5.6.7 IKE profile:foo fvrf:None fail_reason:IPSec Proposal failure fail_class_cnt:14|,
 );
 
 @dtfields = qw/time datetime_obj epoch date_str datetime_str/;
@@ -312,6 +313,31 @@ my %resps = (
            'message' => '%LINK-3-UPDOWN: Interface BRI0:1, changed state to down',
            'host' => 'fqdn',
            'date_raw' => 'Jan 1 14:58:58'
+    },
+    'Cisco Date Insanity' => {
+           'priority' => 'notice',
+           'date' => qq{$year-05-08},
+           'time' => '19:12:19',
+           'content' => 'IPSEC SETUP FAILED for local:1.2.3.4 local_id:1.2.3.4 remote:4.5.6.7 remote_id:4.5.6.7 IKE profile:foo fvrf:None fail_reason:IPSec Proposal failure fail_class_cnt:14',
+           'facility' => 'local7',
+           'domain' => 'company.tld',
+           'program_sub' => undef,
+           'program_sub' => undef,
+           'host_raw' => 'router.company.tld',
+           'program_raw' => '%CRYPTO-5-IPSEC_SETUP_FAILURE',
+           'datetime_raw' => 'May 8 19:12:19',
+           'ntp' => 'ok',
+           'date_str' => qq{$year-05-08 19:12:19},
+           'message_raw' => '<189>May 8 19:12:19 router.company.tld 11815005: May 8 2014 19:12:18.454 CET: %CRYPTO-5-IPSEC_SETUP_FAILURE: IPSEC SETUP FAILED for local:1.2.3.4 local_id:1.2.3.4 remote:4.5.6.7 remote_id:4.5.6.7 IKE profile:foo fvrf:None fail_reason:IPSec Proposal failure fail_class_cnt:14',
+           'priority_int' => 5,
+           'preamble' => 189,
+           'datetime_str' => qq{$year-05-08 19:12:19},
+           'program_pid' => undef,
+           'program_name' => '%CRYPTO-5-IPSEC_SETUP_FAILURE',
+           'facility_int' => 184,
+           'message' => '%CRYPTO-5-IPSEC_SETUP_FAILURE: IPSEC SETUP FAILED for local:1.2.3.4 local_id:1.2.3.4 remote:4.5.6.7 remote_id:4.5.6.7 IKE profile:foo fvrf:None fail_reason:IPSec Proposal failure fail_class_cnt:14',
+           'host' => 'router',
+           'date_raw' => 'May 8 19:12:19'
     },
 );
 

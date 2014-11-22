@@ -358,7 +358,7 @@ sub parse_syslog_line {
     # Host Information:
     if( $raw_string =~ s/$REGEXP{$RegexSet}->{host}//o ) {
         my $hostStr = $1;
-        my($ip) = ($hostStr =~ /($RE{IPv4})/);
+        my($ip) = ($hostStr =~ /($RE{IPv4})/o);
         if( defined $ip && length $ip ) {
             $msg{host_raw} = $hostStr;
             $msg{host} = $ip;
@@ -394,15 +394,14 @@ sub parse_syslog_line {
             $msg{program_raw} = $progStr;
             if( ($msg{program_name}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_name}/o) ) {
                 if (length $msg{program_name} != length $msg{program_raw} ) {
-                    foreach my $var (qw(program_pid program_sub)) {
-                        last if ($msg{$var}) = ($progStr =~ /$REGEXP{$RegexSet}->{$var}/);
-                    }
+                    (($msg{program_pid}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_pid}/o))
+                        || (($msg{program_sub}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_sub}/o))
                 }
             }
         }
     }
     else {
-        $raw_string =~ s/^\s+//o;
+        $raw_string =~ s/^\s+//;
     }
 
     # The left overs should be the message

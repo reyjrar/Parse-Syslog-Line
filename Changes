@@ -1,4 +1,7 @@
 Revision history for Perl module Parse::Syslog::Line
+2.8     2014-11-22 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Regex optimizations for ~ 8% performance increase.
+
 2.7     2014-05-11 - Brad Lhotsky <brad@divisionbyzero.net>
         - Bugifx with Cisco datetime formats
           https://rt.cpan.org/Ticket/Display.html?id=95469

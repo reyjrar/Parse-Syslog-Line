@@ -10,7 +10,7 @@ use Const::Fast;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION        = '2.8';
+our $VERSION        = '2.9';
 
 our $DateTimeCreate    = 1;
 our $ExtractProgram    = 1;

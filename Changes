@@ -1,4 +1,7 @@
 Revision history for Perl module Parse::Syslog::Line
+2.9     2015-01-04 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Fix date handling in the test suite to fix broken tests.
+
 2.8     2014-11-22 - Brad Lhotsky <brad@divisionbyzero.net>
         - Regex optimizations for ~ 8% performance increase.
 

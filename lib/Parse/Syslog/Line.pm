@@ -406,6 +406,7 @@ sub parse_syslog_line {
 
     # The left overs should be the message
     $msg{content} = $raw_string;
+    chomp $msg{content};
     $msg{message} = defined $msg{program_raw} ? "$msg{program_raw}: $msg{content}" : $msg{content};
 
     if( $PruneRaw ) {

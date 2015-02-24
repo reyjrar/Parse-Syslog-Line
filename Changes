@@ -1,4 +1,7 @@
 Revision history for Perl module Parse::Syslog::Line
+3.0     2015-02-24 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Handle NetApp Storage Appliance Logs
+
 2.9     2015-01-04 - Brad Lhotsky <brad@divisionbyzero.net>
         - Fix date handling in the test suite to fix broken tests.
 

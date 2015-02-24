@@ -180,10 +180,11 @@ my %REGEXP = (
         )/x,
         host            => qr/^\s*([^:\s]+)\s+/,
         cisco_hates_you => qr/^\s*[0-9]*:\s+/,
-        program_raw     => qr/^\s*([^:]+):\s*/,
+        program_raw     => qr/^\s*([^\[][^:]+):\s*/,
         program_name    => qr/^([^\[\(\ ]+)/,
         program_sub     => qr/\(([^\)]+)\)/,
         program_pid     => qr/\[([^\]]+)\]/,
+        program_netapp  => qr/\[([^\]]+)\]:\s*/,
     },
     devel => {
         preamble        => qr/^\<(\d+)\>/,
@@ -207,10 +208,11 @@ my %REGEXP = (
         )/x,
         host            => qr/^\s*([^:\s]+)\s+/,
         cisco_hates_you => qr/^\s*[0-9]*:\s+/,
-        program_raw     => qr/^\s*([^:]+):\s*/,
+        program_raw     => qr/^\s*([^\[][^:]+):\s*/,
         program_name    => qr/^([^\[\(\ ]+)/,
         program_sub     => qr/\(([^\)]+)\)/,
         program_pid     => qr/\[([^\]]+)\]/,
+        program_netapp  => qr/\[([^\]]+)\]:\s*/,
     },
 );
 
@@ -387,17 +389,32 @@ sub parse_syslog_line {
 
     #
     # Parse the Program portion
-    if( $ExtractProgram && $raw_string =~ s/$REGEXP{$RegexSet}->{program_raw}//o ) {
-        my $progStr = $1;
-        chomp($progStr);
-        if( defined $progStr && length $progStr) {
-            $msg{program_raw} = $progStr;
-            if( ($msg{program_name}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_name}/o) ) {
-                if (length $msg{program_name} != length $msg{program_raw} ) {
-                    (($msg{program_pid}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_pid}/o))
-                        || (($msg{program_sub}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_sub}/o))
+    if( $ExtractProgram ) {
+        if( $raw_string =~ s/$REGEXP{$RegexSet}->{program_raw}//o ) {
+            my $progStr = $1;
+            chomp($progStr);
+            if( defined $progStr && length $progStr) {
+                $msg{program_raw} = $progStr;
+                if( ($msg{program_name}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_name}/o) ) {
+                    if (length $msg{program_name} != length $msg{program_raw} ) {
+                        (($msg{program_pid}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_pid}/o))
+                            || (($msg{program_sub}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_sub}/o))
+                    }
                 }
             }
+        }
+        elsif( $raw_string =~ s/$REGEXP{$RegexSet}->{program_netapp}//o ) {
+            # Check for a [host thing.subthing:level]: tag, Thanks NetApp.
+            my $subStr = $1;
+            $msg{program_raw} = qq{[$subStr]};
+            my $progStr = (split /\s+/, $subStr)[-1];
+            my ($program,$level) = split /\:/, $progStr;
+            $msg{program_name} = $program;
+            if(!exists $msg{priority} && exists $LOG_PRIORITY{$level}) {
+                $msg{priority} = $level;
+                $msg{priority_int} = $LOG_PRIORITY{$level};
+            }
+            $raw_string =~ s/^[\s:]+//;
         }
     }
     else {

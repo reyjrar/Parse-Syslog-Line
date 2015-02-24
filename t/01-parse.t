@@ -27,6 +27,7 @@ my %msgs = (
     'Cisco NTP No Sync'      => q|<187>Jan 1 14:58:58 fqdn.tld 6951: .Jan 1 14:58:57: %LINK-3-UPDOWN: Interface BRI0:1, changed state to down|,
     'Cisco NTP Unconfigured' => q|<189>Jan 1 12:22:26 1.2.3.4 5971: *Jan 1 02:54:25: %SYS-5-CONFIG_I: Configured from console by vty0 (10.100.0.68)|,
     'Cisco Date Insanity'    => q|<189>Jan 1 19:12:19 router.company.tld 11815005: Jan 1 2014 19:12:18.454 CET: %CRYPTO-5-IPSEC_SETUP_FAILURE: IPSEC SETUP FAILED for local:1.2.3.4 local_id:1.2.3.4 remote:4.5.6.7 remote_id:4.5.6.7 IKE profile:foo fvrf:None fail_reason:IPSec Proposal failure fail_class_cnt:14|,
+    'NetApp Filer Logs'      => q|<134>Jan 1 11:28:13 filer-201.example.com [filer-201: scsitarget.ispfct.targetReset:notice]: FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)|,
 );
 
 @dtfields = qw/time datetime_obj epoch date_str datetime_str/;
@@ -339,6 +340,29 @@ my %resps = (
            'host' => 'router',
            'date_raw' => 'Jan 1 19:12:19'
     },
+    'NetApp Filer Logs' => {
+           'priority' => 'info',
+           'facility_int' => 128,
+           'date_str' => qq{$year-01-01 11:28:13},
+           'message' => '[filer-201: scsitarget.ispfct.targetReset:notice]: FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)',
+           'program_name' => 'scsitarget.ispfct.targetReset',
+           'facility' => 'local0',
+           'host_raw' => 'filer-201.example.com',
+           'program_raw' => '[filer-201: scsitarget.ispfct.targetReset:notice]',
+           'priority_int' => 6,
+           'program_pid' => undef,
+           'domain' => 'example.com',
+           'datetime_raw' => 'Jan 1 11:28:13',
+           'content' => 'FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)',
+           'date' => qq{$year-01-01},
+           'time' => '11:28:13',
+           'datetime_str' => qq{$year-01-01 11:28:13},
+           'program_sub' => undef,
+           'host' => 'filer-201',
+           'date_raw' => 'Jan 1 11:28:13',
+           'preamble' => 134,
+           'message_raw' => '<134>Jan 1 11:28:13 filer-201.example.com [filer-201: scsitarget.ispfct.targetReset:notice]: FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)'
+         },
 );
 
 my @_delete = qw(datetime_obj epoch);

@@ -404,17 +404,17 @@ sub parse_syslog_line {
             }
         }
         elsif( $raw_string =~ s/$REGEXP{$RegexSet}->{program_netapp}//o ) {
-            # Check for a [host thing.subthing:level]: tag, Thanks NetApp.
+            # Check for a [host thing.subthing:level]: tag
+            #          or [host:thing.subthing:level]: tag, Thanks NetApp.
             my $subStr = $1;
             $msg{program_raw} = qq{[$subStr]};
-            my $progStr = (split /\s+/, $subStr)[-1];
-            my ($program,$level) = split /\:/, $progStr;
+            my ($host,$program,$level) = split /[: ]+/, $subStr;
             $msg{program_name} = $program;
             if(!exists $msg{priority} && exists $LOG_PRIORITY{$level}) {
                 $msg{priority} = $level;
                 $msg{priority_int} = $LOG_PRIORITY{$level};
             }
-            $raw_string =~ s/^[\s:]+//;
+            $raw_string =~ s/^[ :]+//;
         }
     }
     else {

@@ -1,4 +1,7 @@
 Revision history for Perl module Parse::Syslog::Line
+3.1     2015-03-06 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Handle version differences with NetApp log formats
+
 3.0     2015-02-24 - Brad Lhotsky <brad@divisionbyzero.net>
         - Handle NetApp Storage Appliance Logs
 

@@ -10,7 +10,7 @@ use Const::Fast;
 use DateTime::Format::HTTP;
 use HTTP::Date;
 
-our $VERSION        = '3.1';
+our $VERSION        = '3.2';
 
 our $DateTimeCreate    = 1;
 our $ExtractProgram    = 1;
@@ -391,10 +391,9 @@ sub parse_syslog_line {
     # Parse the Program portion
     if( $ExtractProgram ) {
         if( $raw_string =~ s/$REGEXP{$RegexSet}->{program_raw}//o ) {
-            my $progStr = $1;
-            chomp($progStr);
+            $msg{program_raw} = $1;
+            my $progStr = join ' ', grep {!exists $INT_PRIORITY{$_}} split /\s+/, $msg{program_raw};
             if( defined $progStr && length $progStr) {
-                $msg{program_raw} = $progStr;
                 if( ($msg{program_name}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_name}/o) ) {
                     if (length $msg{program_name} != length $msg{program_raw} ) {
                         (($msg{program_pid}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_pid}/o))

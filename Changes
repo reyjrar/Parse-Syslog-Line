@@ -1,4 +1,8 @@
 Revision history for Perl module Parse::Syslog::Line
+3.2     2015-05-27 - Brad Lhotsky <brad@divisionbyzero.net>
+        - Handle logs with priority inserted between hostname
+          and program name.
+
 3.1     2015-03-06 - Brad Lhotsky <brad@divisionbyzero.net>
         - Handle version differences with NetApp log formats
 

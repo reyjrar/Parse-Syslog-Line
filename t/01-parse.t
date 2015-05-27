@@ -30,6 +30,7 @@ my %msgs = (
     'NetApp Filer Logs'      => q|<134>Jan 1 11:28:13 filer-201.example.com [filer-201: scsitarget.ispfct.targetReset:notice]: FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)|,
     'NetApp Filer Alt1'      => q|<134>Jan 1 11:28:13 filer-201.example.com [filer-201 scsitarget.ispfct.targetReset:notice]: FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)|,
     'NetApp Filer Alt2'      => q|<134>Jan 1 11:28:13 filer-201.example.com [filer-201:scsitarget.ispfct.targetReset:notice]: FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)|,
+    'F5 includes level'      => q|<182>May 27 10:55:37 f5lb-201.example.com info logger: [ssl_acc] 10.0.0.1 - bob [27/May/2015:10:55:37 +0000] "/xui/update/configuration/alert/statusmenu/coloradvisory" 200 1702|,
 );
 
 @dtfields = qw/time datetime_obj epoch date_str datetime_str/;
@@ -411,10 +412,33 @@ my %resps = (
            'program_sub' => undef,
            'program_name' => 'scsitarget.ispfct.targetReset',
     },
+    'F5 includes level' => {
+           'preamble' => 182,
+           'program_raw' => 'info logger',
+           'datetime_raw' => 'May 27 10:55:37',
+           'datetime_str' => "$year-05-27 10:55:37",
+           'domain' => 'example.com',
+           'host_raw' => 'f5lb-201.example.com',
+           'date_str' => "$year-05-27 10:55:37",
+           'priority_int' => 6,
+           'message_raw' => '<182>May 27 10:55:37 f5lb-201.example.com info logger: [ssl_acc] 10.0.0.1 - bob [27/May/2015:10:55:37 +0000] "/xui/update/configuration/alert/statusmenu/coloradvisory" 200 1702',
+           'content' => '[ssl_acc] 10.0.0.1 - bob [27/May/2015:10:55:37 +0000] "/xui/update/configuration/alert/statusmenu/coloradvisory" 200 1702',
+           'host' => 'f5lb-201',
+           'program_pid' => undef,
+           'facility_int' => 176,
+           'program_sub' => undef,
+           'facility' => 'local6',
+           'message' => 'info logger: [ssl_acc] 10.0.0.1 - bob [27/May/2015:10:55:37 +0000] "/xui/update/configuration/alert/statusmenu/coloradvisory" 200 1702',
+           'date_raw' => 'May 27 10:55:37',
+           'program_name' => 'logger',
+           'priority' => 'info',
+           'time' => '10:55:37',
+           'date' => "$year-05-27"
+    },
 );
 
 my @_delete = qw(datetime_obj epoch);
-#
+
 # Remove DateTimeObject because it's large.
 foreach my $set (qw(stable devel)) {
     local $Parse::Syslog::Line::RegexSet = $set;
@@ -424,7 +448,7 @@ foreach my $set (qw(stable devel)) {
         if ( !exists $resps{$name} ) {
             diag( Dumper $msg );
         }
-        is_deeply( $msg, $resps{$name}, "$name ($set)" ) || diag(Dumper $msg);
+        is_deeply( $msg, $resps{$name}, "$name ($set)" );
     }
 }
 
@@ -437,7 +461,7 @@ do {
         delete $msg->{$_} for @_delete;
         $expected{content} = $expected{program_raw} . ': ' . $expected{content};
         $expected{$_} = undef for qw(program_raw program_name program_sub program_pid);
-        is_deeply( $msg, \%expected, "$name (no extract program)" ) || diag(Dumper $msg);
+        is_deeply( $msg, \%expected, "$name (no extract program)" );
     }
 };
 

@@ -7,7 +7,6 @@ use Time::HiRes qw(gettimeofday tv_interval);
 
 $Parse::Syslog::Line::DateTimeCreate = 0;
 $Parse::Syslog::Line::EpochCreate    = 0;
-$Parse::Syslog::Line::RegexSet       = 'devel';
 
 my @msgs = (
 	q|<11>Jan  1 00:00:00 mainfw snort[32640]: [1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161|,

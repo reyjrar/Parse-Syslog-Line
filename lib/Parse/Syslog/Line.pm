@@ -43,10 +43,8 @@ parsed out.
     #       time            => 'HH::MM:SS',
     #       epoch           => 1361095933,
     #       datetime_str    => 'YYYY-MM-DD HH:MM:SS',
-    #       datet_str       => 'YYYY-MM-DD HH:MM:SS',
     #       datetime_obj    => new DateTime(), # If installed
     #       datetime_raw    => 'Feb 17 11:12:13'
-    #       date_raw        => 'Feb 17 11:12:13'
     #       date_raw        => 'Feb 17 11:12:13'
     #       host_raw        => 'hostname',  # Hostname as it appeared in the message
     #       host            => 'hostname',  # Hostname without domain
@@ -276,7 +274,7 @@ This should be an array of fields you'd like to be removed from the hash referen
 
 Usage:
 
-  @Parse::Syslog::Line::PruneFields = qw(date_str date_raw facility_int priority_int);
+  @Parse::Syslog::Line::PruneFields = qw(date_raw facility_int priority_int);
 
 =head2 RegexSet
 
@@ -298,7 +296,7 @@ Returns a hash reference of syslog message parsed data.
 
 my %_empty_msg = map { $_ => undef } qw(
     preamble priority priority_int facility facility_int
-    datetime_raw date_raw date time date_str datetime_str datetime_obj epoch
+    datetime_raw date_raw date time datetime_str datetime_obj epoch
     host_raw host domain
     program_raw program_name program_pid program_sub
 );
@@ -355,7 +353,6 @@ sub parse_syslog_line {
             $msg{epoch}        = HTTP::Date::str2time($msg{datetime_raw});
             $msg{datetime_str} = HTTP::Date::time2iso($msg{epoch});
         }
-        $msg{date_str} = $msg{datetime_str} if exists $msg{datetime_str};
     }
 
     #

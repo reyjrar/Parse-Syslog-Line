@@ -31,6 +31,7 @@ my %msgs = (
     'NetApp Filer Alt1'      => q|<134>Jan 1 11:28:13 filer-201.example.com [filer-201 scsitarget.ispfct.targetReset:notice]: FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)|,
     'NetApp Filer Alt2'      => q|<134>Jan 1 11:28:13 filer-201.example.com [filer-201:scsitarget.ispfct.targetReset:notice]: FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)|,
     'F5 includes level'      => q|<182>May 27 10:55:37 f5lb-201.example.com info logger: [ssl_acc] 10.0.0.1 - bob [27/May/2015:10:55:37 +0000] "/xui/update/configuration/alert/statusmenu/coloradvisory" 200 1702|,
+    'ISO8601 with micro'     => q|2015-09-30T06:26:06.779373-05:00 my-host my-script.pl: {"lunchTime":1443612366.442}|,
 );
 
 @dtfields = qw/time datetime_obj epoch date_str datetime_str/;
@@ -434,6 +435,29 @@ my %resps = (
            'priority' => 'info',
            'time' => '10:55:37',
            'date' => "$year-05-27"
+    },
+    'ISO8601 with micro' => {
+           'date_str' => '2015-09-30 06:26:06',
+           'program_name' => 'my-script.pl',
+           'program_raw' => 'my-script.pl',
+           'datetime_raw' => '2015-09-30T06:26:06.779373-05:00',
+           'date_raw' => '2015-09-30T06:26:06.779373-05:00',
+           'message_raw' => '2015-09-30T06:26:06.779373-05:00 my-host my-script.pl: {"lunchTime":1443612366.442}',
+           'facility' => undef,
+           'content' => '{"lunchTime":1443612366.442}',
+           'date' => '2015-09-30',
+           'program_pid' => undef,
+           'facility_int' => undef,
+           'priority' => undef,
+           'domain' => undef,
+           'message' => 'my-script.pl: {"lunchTime":1443612366.442}',
+           'host_raw' => 'my-host',
+           'time' => '06:26:06',
+           'priority_int' => undef,
+           'host' => 'my-host',
+           'program_sub' => undef,
+           'preamble' => undef,
+           'datetime_str' => '2015-09-30 06:26:06'
     },
 );
 

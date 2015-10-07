@@ -176,6 +176,7 @@ my %REGEXP = (
                 [0-9]{4}(\-[0-9]{2}){2}     # Date YYYY-MM-DD
                 (\s|T)                      # Date Separator T or ' '
                 [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
+                (?:\.(?:[0-9]{3}){1,2})?    # Time: .DDD millisecond or .DDDDDD microsecond resolution
                 ([+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
         )/x,
         host            => qr/^\s*([^:\s]+)\s+/,
@@ -204,6 +205,7 @@ my %REGEXP = (
                 [0-9]{4}(?:\-[0-9]{2}){2}     # Date YYYY-MM-DD
                 (?:\s|T)                      # Date Separator T or ' '
                 [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
+                (?:\.(?:[0-9]{3}){1,2})?    # Time: .DDD millisecond or .DDDDDD microsecond resolution
                 (?:[+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
         )/x,
         host            => qr/^\s*([^:\s]+)\s+/,

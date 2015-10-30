@@ -420,7 +420,6 @@ my %resps = (
            'date' => "$year-05-27"
     },
     'ISO8601 with micro' => {
-           'date_str' => '2015-09-30 06:26:06',
            'program_name' => 'my-script.pl',
            'program_raw' => 'my-script.pl',
            'datetime_raw' => '2015-09-30T06:26:06.779373-05:00',

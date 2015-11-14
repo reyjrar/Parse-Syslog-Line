@@ -32,6 +32,7 @@ my %msgs = (
     'NetApp Filer Alt2'      => q|<134>Jan 1 11:28:13 filer-201.example.com [filer-201:scsitarget.ispfct.targetReset:notice]: FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)|,
     'F5 includes level'      => q|<182>May 27 10:55:37 f5lb-201.example.com info logger: [ssl_acc] 10.0.0.1 - bob [27/May/2015:10:55:37 +0000] "/xui/update/configuration/alert/statusmenu/coloradvisory" 200 1702|,
     'ISO8601 with micro'     => q|2015-09-30T06:26:06.779373-05:00 my-host my-script.pl: {"lunchTime":1443612366.442}|,
+    'Year with old date'     => q|2015 Nov 13 13:40:01 ether rsyslogd-2177: imuxsock begins to drop messages from pid 17840 due to rate-limiting|,
 );
 
 @dtfields = qw/time datetime_obj epoch datetime_str/;
@@ -440,6 +441,28 @@ my %resps = (
            'program_sub' => undef,
            'preamble' => undef,
            'datetime_str' => '2015-09-30 06:26:06'
+    },
+    'Year with old date' => {
+           'priority' => undef,
+           'date' => '2015-11-13',
+           'time' => '13:40:01',
+           'content' => 'imuxsock begins to drop messages from pid 17840 due to rate-limiting',
+           'facility' => undef,
+           'domain' => undef,
+           'program_sub' => undef,
+           'host_raw' => 'ether',
+           'program_raw' => 'rsyslogd-2177',
+           'datetime_raw' => 'Nov 13 13:40:01',
+           'message_raw' => '2015 Nov 13 13:40:01 ether rsyslogd-2177: imuxsock begins to drop messages from pid 17840 due to rate-limiting',
+           'priority_int' => undef,
+           'preamble' => undef,
+           'datetime_str' => '2015-11-13 13:40:01',
+           'program_pid' => undef,
+           'program_name' => 'rsyslogd-2177',
+           'facility_int' => undef,
+           'message' => 'rsyslogd-2177: imuxsock begins to drop messages from pid 17840 due to rate-limiting',
+           'host' => 'ether',
+           'date_raw' => 'Nov 13 13:40:01'
     },
 );
 

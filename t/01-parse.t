@@ -402,7 +402,7 @@ my %resps = (
            'preamble' => 182,
            'program_raw' => 'info logger',
            'datetime_raw' => 'May 27 10:55:37',
-           'datetime_str' => "$year-05-27 10:55:37",
+           'datetime_str' => "2015-05-27 10:55:37",
            'domain' => 'example.com',
            'host_raw' => 'f5lb-201.example.com',
            'priority_int' => 6,
@@ -418,7 +418,7 @@ my %resps = (
            'program_name' => 'logger',
            'priority' => 'info',
            'time' => '10:55:37',
-           'date' => "$year-05-27"
+           'date' => "2015-05-27"
     },
     'ISO8601 with micro' => {
            'program_name' => 'my-script.pl',

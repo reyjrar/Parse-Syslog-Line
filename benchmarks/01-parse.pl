@@ -28,6 +28,13 @@ timethese(10_000, {
     'Epoch Only' => sub {
         local $Parse::Syslog::Line::DateTimeCreate = 0;
         local $Parse::Syslog::Line::EpochCreate    = 1;
+        local $Parse::Syslog::Line::DateTimeStr    = 0;
+        parse_syslog_line($_) for @msgs
+    },
+    'Epoch + Date' => sub {
+        local $Parse::Syslog::Line::DateTimeCreate = 0;
+        local $Parse::Syslog::Line::EpochCreate    = 1;
+        local $Parse::Syslog::Line::DateTimeStr    = 1;
         parse_syslog_line($_) for @msgs
     },
     'Minimalistic Data' => sub {

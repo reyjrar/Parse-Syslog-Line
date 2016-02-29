@@ -13,6 +13,7 @@ use HTTP::Date;
 our $VERSION        = '3.3';
 
 our $DateTimeCreate    = 1;
+our $DateTimeStr       = 1;
 our $ExtractProgram    = 1;
 our $FmtDate;
 our $EpochCreate       = 0;
@@ -490,7 +491,7 @@ sub parse_syslog_line {
                     $msg{epoch} -= $offset if $offset;
                 }
             }
-            $msg{datetime_str} = HTTP::Date::time2iso($msg{epoch});
+            $msg{datetime_str} = HTTP::Date::time2iso($msg{epoch}) if $DateTimeStr;
         }
     }
 

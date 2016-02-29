@@ -313,6 +313,10 @@ my %_empty_msg = map { $_ => undef } qw(
     program_raw program_name program_pid program_sub
 );
 
+my @MoY = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
+my %MoY;
+@MoY{@MoY} = 0..11;
+
 =head1 VARIABLES
 
 =head2 ExtractProgram
@@ -455,8 +459,38 @@ sub parse_syslog_line {
             @msg{qw(date time epoch datetime_str)} = $FmtDate->($msg{datetime_raw});
         }
         elsif( $EpochCreate ) {
-             $msg{epoch}        = HTTP::Date::str2time($msg{datetime_raw});
-             $msg{datetime_str} = HTTP::Date::time2iso($msg{epoch});
+            # TODO we want want to handle epoch < 0?
+            if ( $FULL_DATE_INNER ) {
+                my $month = $MONTH_DATE_1;
+                $msg{epoch} = POSIX::mktime(
+                    $SECOND_DATE_1||0,
+                    $MINUTE_DATE_1,
+                    $HOUR_DATE_1,
+                    $DAY_DATE_1,
+                    $MoY{$month}||$MoY{"\u\L$month"},
+                    $YEAR_DATE_1?($YEAR_DATE_1-1900):(localtime)[5]
+                );
+            }
+            else {
+                $msg{epoch} = POSIX::mktime(
+                    $SECOND_DATE_2||0,
+                    $MINUTE_DATE_2,
+                    $HOUR_DATE_2,
+                    $DAY_DATE_2,
+                    $MONTH_DATE_2,
+                    $YEAR_DATE_1?($YEAR_DATE_1-1900):(localtime)[5]
+                );
+                # mktime doesn't handle fractional seconds, so do it here
+                $msg{epoch} .= $FRACTIONAL_SECONDS_DATE_2
+                    if $FRACTIONAL_SECONDS_DATE_2;
+                if ( $TIMEZONE_DATE_2 ) {
+                    my $offset   = 3600 * $TZ_HOUR;
+                    $offset     += 60   * $TZ_MIN if $TZ_MIN;
+                    $offset     *= -1  if $TZ_SIGN && $TZ_SIGN eq '-';
+                    $msg{epoch} -= $offset if $offset;
+                }
+            }
+            $msg{datetime_str} = HTTP::Date::time2iso($msg{epoch});
         }
     }
 

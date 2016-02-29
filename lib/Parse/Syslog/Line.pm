@@ -201,7 +201,7 @@ my %REGEXP = (
         /x,
         date_iso8601    => qr/^(
                 [0-9]{4}(?:\-[0-9]{2}){2}     # Date YYYY-MM-DD
-                (?:\s|T)                      # Date Separator T or ' '
+                [\sT]                         # Date Separator T or ' '
                 [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
                 (?:\.(?:[0-9]{3}){1,2})?    # Time: .DDD millisecond or .DDDDDD microsecond resolution
                 (?:[+\-][0-9]{2}\:[0-9]{2})?  # UTC Offset +DD:MM
@@ -214,6 +214,103 @@ my %REGEXP = (
         program_pid     => qr/\[([^\]]+)\]/,
         program_netapp  => qr/\[([^\]]+)\]:\s*/,
     },
+);
+
+my $date_long = qr/
+        (?:[0-9]{4}\s+)?                # Year: Because, Cisco
+        ([\.\*])?                       # Cisco adds a * for no ntp, and a . for configured but out of sync
+        [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
+        (?:\s+[0-9]{4})?                # Year: Because, Cisco
+        \s+                             # Date Separator: spaces
+        [0-9]{1,2}(?:\:[0-9]{2}){1,2}   # Time: HH:MM or HH:MM:SS
+        (?:\.[0-9]{3})?                 # Time: .DDD ms resolution
+        (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
+        :?                         # Cisco adds a : after the second timestamp
+/x;
+my $extract = qr/
+        \s*([^\[][^:]+):\s*     # program_raw, capture 7
+    |   \[([^\]]+)\]:\s* [\s:]+  # program_netapp, capture 8
+/x;
+my $no_extract = qr/()()\s+/;
+my @res;
+foreach my $this_extract ( $extract, $no_extract ) {
+push @res, qr/
+    \A
+        (?: \< (\d+) \> )?  # Preamble, capture 1
+        (                 # date
+                (?: ([0-9]{4}) \s* )?
+                (               #capture 2
+                    ([a-zA-Z]{3}) \s+
+                    ([0-9]+)      \s+
+                    ([0-9]{1,2}) : ([0-9]{2}) (?: : ([0-9]{2}) )?
+                )
+            |               # capture 2 again
+                    ([0-9]{4}) - ([0-9]{2}) - ([0-9]{2})     # Date YYYY-MM-DD
+                    [\sT]                         # Date Separator T or ' '
+                    ([0-9]{2}) : ([0-9]{2}) (?: : ([0-9]{2}) )?   # Time HH:MM:SS
+                    (\.[0-9]{3,6})?      # Time: .DDD millisecond
+                                                  # or .DDDDDD microsecond
+                                                  # resolution
+                    (([+\-]?)([0-9]{1,2})(?:\:([0-9]{2})))?  # UTC Offset +DD:MM
+        )?
+        (?:
+            \s* ([^:\s]+) \s+   # host, capture 10
+        )?
+        (?: # cisco_hates_you
+            (\s*[0-9]*:\s+) ( $date_long )? # cisco date, capture 4 & 5 & 6
+        )?
+        (?: $this_extract )?
+        (.*)                            # final capture
+\n?\z
+/x;
+}
+BEGIN {
+    my @captures = qw/
+        PREAMBLE
+        FULL_DATE
+            YEAR_DATE_1
+        FULL_DATE_INNER
+            MONTH_DATE_1
+            DAY_DATE_1
+            HOUR_DATE_1
+            MINUTE_DATE_1
+            SECOND_DATE_1
+            
+            YEAR_DATE_2
+            MONTH_DATE_2
+            DAY_DATE_2
+            HOUR_DATE_2
+            MINUTE_DATE_2
+            SECOND_DATE_2
+                FRACTIONAL_SECONDS_DATE_2
+            TIMEZONE_DATE_2
+                TZ_SIGN
+                TZ_HOUR
+                TZ_MIN
+        HOST
+        CISCO_HATE
+            CISCO_DATE
+            CISCO_DATE_NTP
+        PROGRAM_RAW
+        PROGRAM_NETAPP
+        CONTENT
+    /;
+
+    for my $index ( 0..$#captures ) {
+        my $name         = $captures[$index];
+        package main; # Trick perl into thinking we are importing these
+        # this means that we can use $PREAMBLE and friends under strict.
+        my $our_glob     = do { no strict 'refs'; \*{"Parse::Syslog::Line::$name"} };
+        my $capture_glob = do { no strict 'refs'; \*{'main::' . ($index+1)} };
+        *$our_glob       = \*$capture_glob;
+    }
+}
+
+my %_empty_msg = map { $_ => undef } qw(
+    preamble priority priority_int facility facility_int
+    datetime_raw date_raw date time datetime_str datetime_obj epoch
+    host_raw host domain
+    program_raw program_name program_pid program_sub
 );
 
 =head1 VARIABLES
@@ -294,28 +391,21 @@ Returns a hash reference of syslog message parsed data.
 
 =cut
 
-my %_empty_msg = map { $_ => undef } qw(
-    preamble priority priority_int facility facility_int
-    datetime_raw date_raw date time datetime_str datetime_obj epoch
-    host_raw host domain
-    program_raw program_name program_pid program_sub
-);
-
 sub parse_syslog_line {
     my ($raw_string) = @_;
 
-    # Verify we have a valid RegexSet
-    die "Invalid RegexSet '$RegexSet', valid are: ". join(", ", sort keys %REGEXP) unless exists $REGEXP{$RegexSet};
-
     # Initialize everything to undef
-    my %msg =  $PruneEmpty ? () : %_empty_msg;
+    my %msg = %_empty_msg;
     $msg{message_raw} = $raw_string unless $PruneRaw;
 
-    #
+    $ExtractProgram
+        ? $raw_string =~ /$res[0]/o
+        : $raw_string =~ /$res[1]/o;
+
     # grab the preamble:
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{preamble}//o ) {
+    if( length $PREAMBLE ) {
         # Cast to integer
-        $msg{preamble} = int $1;
+        $msg{preamble} = int $PREAMBLE;
 
         # Extract Integers
         $msg{priority_int} = $msg{preamble} & $CONV_MASK{priority};
@@ -327,15 +417,30 @@ sub parse_syslog_line {
     }
 
     #
+    if( $CISCO_HATE && $CISCO_DATE ) {
+        # Yes, Cisco adds a second timestamp to it's messages, because it hates you.
+            # Cisco encodes the status of NTP in the second datestamp, so let's pass it back
+            if ( my $ntp = $CISCO_DATE_NTP ) {
+                $msg{ntp} = $ntp eq '.' ? 'out of sync'
+                          : $ntp eq '*' ? 'not configured'
+                          : 'unknown';
+            }
+            else {
+                $msg{ntp} = 'ok';
+            }
+    }
+
+    # After here, we start using regexen to match against our captures,
+    # so make sure that we've copied any data we might need.
+
+    # The left overs should be the message
+    $msg{content} = $CONTENT;
+    my $hostStr = $HOST;
+
+    #
     # Handle Date/Time
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{date}//o) {
-        $msg{datetime_raw} = $1;
-    }
-    elsif( $raw_string =~ s/$REGEXP{$RegexSet}->{date_iso8601}//o) {
-        $msg{datetime_raw} = $1;
-    }
-    if( exists $msg{datetime_raw} && length $msg{datetime_raw} ) {
-        $msg{date_raw} = $msg{datetime_raw};
+    if( length $FULL_DATE ) {
+        $msg{datetime_raw} = $msg{date_raw} = $FULL_DATE_INNER || $FULL_DATE;
 
         # Only parse the DatetTime if we're configured to do so
         if( $DateTimeCreate ) {
@@ -350,15 +455,41 @@ sub parse_syslog_line {
             @msg{qw(date time epoch datetime_str)} = $FmtDate->($msg{datetime_raw});
         }
         elsif( $EpochCreate ) {
-            $msg{epoch}        = HTTP::Date::str2time($msg{datetime_raw});
-            $msg{datetime_str} = HTTP::Date::time2iso($msg{epoch});
+             $msg{epoch}        = HTTP::Date::str2time($msg{datetime_raw});
+             $msg{datetime_str} = HTTP::Date::time2iso($msg{epoch});
         }
     }
 
     #
+    # Parse the Program portion
+    if( $ExtractProgram ) {
+        if( $PROGRAM_RAW ) {
+            $msg{program_raw} = $PROGRAM_RAW;
+            my $progStr = join ' ', grep {!exists $INT_PRIORITY{$_}} split /\s+/, $msg{program_raw};
+            if( defined $progStr && length $progStr) {
+                if( ($msg{program_name}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_name}/o) ) {
+                    if (length $msg{program_name} != length $msg{program_raw} ) {
+                        (($msg{program_pid}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_pid}/o))
+                            || (($msg{program_sub}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_sub}/o))
+                    }
+                }
+            }
+        }
+        elsif( my $subStr = $PROGRAM_NETAPP ) {
+            # Check for a [host thing.subthing:level]: tag
+            #          or [host:thing.subthing:level]: tag, Thanks NetApp.
+            $msg{program_raw} = qq{[$subStr]};
+            my ($host,$program,$level) = split /[: ]+/, $subStr;
+            $msg{program_name} = $program;
+            if(!exists $msg{priority} && exists $LOG_PRIORITY{$level}) {
+                $msg{priority} = $level;
+                $msg{priority_int} = $LOG_PRIORITY{$level};
+            }
+        }
+    }
+
     # Host Information:
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{host}//o ) {
-        my $hostStr = $1;
+    if( $hostStr ) {
         my($ip) = ($hostStr =~ /($RE{IPv4})/o);
         if( defined $ip && length $ip ) {
             $msg{host_raw} = $hostStr;
@@ -371,57 +502,7 @@ sub parse_syslog_line {
             $msg{domain} = $domain;
         }
     }
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{cisco_hates_you}//o ) {
-        # Yes, Cisco adds a second timestamp to it's messages, because it hates you.
-        if( $raw_string =~ s/$REGEXP{$RegexSet}->{date_long}//o ) {
-            # Cisco encodes the status of NTP in the second datestamp, so let's pass it back
-            if ( my $ntp = $1 ) {
-                $msg{ntp} = $ntp eq '.' ? 'out of sync'
-                          : $ntp eq '*' ? 'not configured'
-                          : 'unknown';
-            }
-            else {
-                $msg{ntp} = 'ok';
-            }
-        }
-    }
 
-    #
-    # Parse the Program portion
-    if( $ExtractProgram ) {
-        if( $raw_string =~ s/$REGEXP{$RegexSet}->{program_raw}//o ) {
-            $msg{program_raw} = $1;
-            my $progStr = join ' ', grep {!exists $INT_PRIORITY{$_}} split /\s+/, $msg{program_raw};
-            if( defined $progStr && length $progStr) {
-                if( ($msg{program_name}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_name}/o) ) {
-                    if (length $msg{program_name} != length $msg{program_raw} ) {
-                        (($msg{program_pid}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_pid}/o))
-                            || (($msg{program_sub}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_sub}/o))
-                    }
-                }
-            }
-        }
-        elsif( $raw_string =~ s/$REGEXP{$RegexSet}->{program_netapp}//o ) {
-            # Check for a [host thing.subthing:level]: tag
-            #          or [host:thing.subthing:level]: tag, Thanks NetApp.
-            my $subStr = $1;
-            $msg{program_raw} = qq{[$subStr]};
-            my ($host,$program,$level) = split /[: ]+/, $subStr;
-            $msg{program_name} = $program;
-            if(!exists $msg{priority} && exists $LOG_PRIORITY{$level}) {
-                $msg{priority} = $level;
-                $msg{priority_int} = $LOG_PRIORITY{$level};
-            }
-            $raw_string =~ s/^[ :]+//;
-        }
-    }
-    else {
-        $raw_string =~ s/^\s+//;
-    }
-
-    # The left overs should be the message
-    $msg{content} = $raw_string;
-    chomp $msg{content};
     $msg{message} = defined $msg{program_raw} ? "$msg{program_raw}: $msg{content}" : $msg{content};
 
     if( $PruneRaw ) {

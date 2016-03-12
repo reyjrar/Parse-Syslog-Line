@@ -4,21 +4,22 @@ use Test::More;
 
 use Data::Dumper;
 use DateTime;
+use Test::MockTime;
 
 my $dt = DateTime->now();
 my $year = $dt->year;
 
-BEGIN {
-	use_ok( 'Parse::Syslog::Line' );
-}
-$Parse::Syslog::Line::EpochCreate = 1;
+# this avoids HTTP::Date weirdnes with dates "in the future"
+Test::MockTime::set_fixed_time("2016-01-01T00:00:01Z");
+
+use Parse::Syslog::Line qw/:with_timezones/;
 
 my %msgs = (
-	'Snort Message Parse'    => q|<11>Jan  1 00:00:00 mainfw snort[32640]: [1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161|,
-	'IP as Hostname'         => q|<11>Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
-	'Without Preamble'       => q|Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
-	'Dotted Hostname'        => q|<11>Jan  1 00:00:00 dev.example.com dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
-	'Syslog reset'           => q|Jan  1 00:00:00 example syslogd 1.2.3: restart (remote reception).|,
+    'Snort Message Parse'    => q|<11>Jan  1 00:00:00 mainfw snort[32640]: [1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161|,
+    'IP as Hostname'         => q|<11>Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
+    'Without Preamble'       => q|Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
+    'Dotted Hostname'        => q|<11>Jan  1 00:00:00 dev.example.com dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|,
+    'Syslog reset'           => q|Jan  1 00:00:00 example syslogd 1.2.3: restart (remote reception).|,
     'FreeBSD'                => q|<78>Jan  1 08:15:00 /usr/sbin/cron[73991]: (root) CMD (/usr/libexec/atrun)|,
     'Cisco ASA'              => q|<163>Jan 1 18:39:00 hostname.domain.tld %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside|,
     'Cisco ASA Alt'          => q|<161>Jan 1 18:39:00 hostname : %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside|,
@@ -466,53 +467,88 @@ my %resps = (
     },
 );
 
-my @_delete = qw(datetime_obj epoch);
+my @test_configs = (
+    { 'Defaults'        => { 'DateTimeCreate' => 1, 'EpochCreate' => 0, 'IgnoreTimeZones' => 0, 'NormalizeToUTC' => 0, }, },
+    { 'IgnoreTimeZones' => { 'DateTimeCreate' => 0, 'EpochCreate' => 0, 'IgnoreTimeZones' => 1, 'NormalizeToUTC' => 0, }, },
+);
 
-# Remove DateTimeObject because it's large.
-foreach my $set (qw(stable devel)) {
-    local $Parse::Syslog::Line::RegexSet = $set;
-    foreach my $name (keys %msgs) {
-        my $msg = parse_syslog_line($msgs{$name});
-        delete $msg->{$_} for @_delete;
-        if ( !exists $resps{$name} ) {
-            diag( Dumper $msg );
+foreach my $set (@test_configs) {
+
+    my ($set_name, $config) = each %{$set};
+
+    subtest $set_name => sub {
+        local ( # localized to subtest scope
+            $Parse::Syslog::Line::DateTimeCreate,
+            $Parse::Syslog::Line::EpochCreate,
+            $Parse::Syslog::Line::IgnoreTimeZones,
+            $Parse::Syslog::Line::NormalizeToUTC,
+        );
+
+        _set_test_config( $config );
+
+        my @_delete = qw(datetime_obj epoch);
+
+        # Remove DateTimeObject because it's large.
+        foreach my $set (qw(stable devel)) {
+            local $Parse::Syslog::Line::RegexSet = $set;
+            foreach my $name (sort keys %msgs) {
+                my $msg = parse_syslog_line($msgs{$name});
+                delete $msg->{$_} for @_delete;
+                if ( !exists $resps{$name} ) {
+                    diag( Dumper $msg );
+                }
+                is_deeply( $msg, $resps{$name}, "$name ($set)" );
+            }
         }
-        is_deeply( $msg, $resps{$name}, "$name ($set)" );
-    }
-}
 
-# Disable Program extraction
-do {
-    local $Parse::Syslog::Line::ExtractProgram = 0;
-    foreach my $name (keys %msgs) {
-        my $msg = parse_syslog_line($msgs{$name});
-        my %expected = %{ $resps{$name} };
-        delete $msg->{$_} for @_delete;
-        $expected{content} = $expected{program_raw} . ': ' . $expected{content};
-        $expected{$_} = undef for qw(program_raw program_name program_sub program_pid);
-        is_deeply( $msg, \%expected, "$name (no extract program)" );
-    }
+        # Disable Program extraction
+        do {
+            local $Parse::Syslog::Line::ExtractProgram = 0;
+            foreach my $name (sort keys %msgs) {
+                my $msg = parse_syslog_line($msgs{$name});
+                my %expected = %{ $resps{$name} };
+                delete $msg->{$_} for @_delete;
+                $expected{content} = $expected{program_raw} . ': ' . $expected{content};
+                $expected{$_} = undef for qw(program_raw program_name program_sub program_pid);
+                is_deeply( $msg, \%expected, "$name (no extract program)" );
+            }
+        };
+    };
 };
 
+subtest 'Custom parser' => sub {
 
-sub parse_func {
-    my ($date) = @_;
-    $date //= " ";
-    my $modified = "[$date]";
+    sub parse_func {
+        my ($date) = @_;
+        $date //= " ";
+        my $modified = "[$date]";
 
-    return $modified, undef, undef, undef;
-}
-
-$Parse::Syslog::Line::DateTimeCreate = 0;
-$Parse::Syslog::Line::FmtDate = \&parse_func;
-
-foreach my $name (keys %msgs) {
-    foreach my $part (@dtfields) {
-        $resps{$name}{$part} = undef;
+        return $modified, undef, undef, undef, undef;
     }
-    $resps{$name}{date} = "[" . $resps{$name}{datetime_raw} . "]";
-    my $msg = parse_syslog_line($msgs{$name});
-    is_deeply( $msg, $resps{$name}, "FmtDate " . $name );
-}
+
+    local $Parse::Syslog::Line::DateTimeCreate = 0;
+    local $Parse::Syslog::Line::FmtDate = \&parse_func;
+
+    foreach my $name (sort keys %msgs) {
+        foreach my $part (@dtfields, qw/datetime_utc/) {
+            $resps{$name}{$part} = undef;
+        }
+        $resps{$name}{date} = "[" . $resps{$name}{datetime_raw} . "]";
+        my $msg = parse_syslog_line($msgs{$name});
+        is_deeply( $msg, $resps{$name}, "FmtDate " . $name );
+    }
+    done_testing();
+};
 
 done_testing();
+
+sub _set_test_config{
+    my ( $config ) = @_;
+
+    # set config values
+    while (my ($name, $value) = each %{$config}) {
+        ${"Parse::Syslog::Line::$name"} = $value;
+    };
+
+    return;
+};

@@ -34,6 +34,7 @@ my %msgs = (
     'F5 includes level'      => q|<182>Jan 1 10:55:37 f5lb-201.example.com info logger: [ssl_acc] 10.0.0.1 - bob [01/Jan/2015:10:55:37 +0000] "/xui/update/configuration/alert/statusmenu/coloradvisory" 200 1702|,
     'ISO8601 with micro'     => q|2015-09-30T06:26:06.779373-05:00 my-host my-script.pl: {"lunchTime":1443612366.442}|,
     'Year with old date'     => q|2015 Nov 13 13:40:01 ether rsyslogd-2177: imuxsock begins to drop messages from pid 17840 due to rate-limiting|,
+    'High Precision Dates'   => q|2016-11-19T20:50:01.749659+01:00 janus CROND[14400]: (root) CMD (/usr/lib64/sa/sa1 1 1)|,
 );
 
 @dtfields = qw/time datetime_obj epoch datetime_str/;
@@ -464,6 +465,28 @@ my %resps = (
            'message' => 'rsyslogd-2177: imuxsock begins to drop messages from pid 17840 due to rate-limiting',
            'host' => 'ether',
            'date_raw' => 'Nov 13 13:40:01'
+    },
+    'High Precision Dates' => {
+           'program_pid' => '14400',
+           'datetime_str' => '2016-11-19 20:50:01',
+           'content' => '(root) CMD (/usr/lib64/sa/sa1 1 1)',
+           'priority_int' => undef,
+           'message_raw' => '2016-11-19T20:50:01.749659+01:00 janus CROND[14400]: (root) CMD (/usr/lib64/sa/sa1 1 1)',
+           'priority' => undef,
+           'program_raw' => 'CROND[14400]',
+           'program_name' => 'CROND',
+           'program_sub' => undef,
+           'preamble' => undef,
+           'time' => '20:50:01',
+           'facility_int' => undef,
+           'host_raw' => 'janus',
+           'host' => 'janus',
+           'datetime_raw' => '2016-11-19T20:50:01.749659+01:00',
+           'facility' => undef,
+           'message' => 'CROND[14400]: (root) CMD (/usr/lib64/sa/sa1 1 1)',
+           'domain' => undef,
+           'date' => '2016-11-19',
+           'date_raw' => '2016-11-19T20:50:01.749659+01:00'
     },
 );
 

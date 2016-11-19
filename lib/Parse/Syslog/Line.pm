@@ -189,7 +189,7 @@ my %REGEXP = (
                 (?:\s+[0-9]{4})?                # Year: Because, Cisco
                 \s+                             # Date Separator: spaces
                 [0-9]{1,2}(?:\:[0-9]{2}){1,2}   # Time: HH:MM or HH:MM:SS
-                (?:\.[0-9]{3})?                 # Time: .DDD ms resolution
+                (?:\.[0-9]{3,6})?               # Time: .DDD(DDD) ms resolution
                 (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
                 (?:\:?)                         # Cisco adds a : after the second timestamp
         /x,
@@ -218,7 +218,7 @@ my %REGEXP = (
                 (?:\s+[0-9]{4})?                # Year: Because, Cisco
                 \s+                             # Date Separator: spaces
                 [0-9]{1,2}(?:\:[0-9]{2}){1,2}   # Time: HH:MM or HH:MM:SS
-                (?:\.[0-9]{3})?                 # Time: .DDD ms resolution
+                (?:\.[0-9]{3,6})?               # Time: .DDD(DDD) ms resolution
                 (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
                 (?:\:?)                         # Cisco adds a : after the second timestamp
         /x,

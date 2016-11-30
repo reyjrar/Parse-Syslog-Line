@@ -511,17 +511,13 @@ foreach my $set (@test_configs) {
 
         my @_delete = qw(datetime_obj epoch);
 
-        # Remove DateTimeObject because it's large.
-        foreach my $set (qw(stable devel)) {
-            local $Parse::Syslog::Line::RegexSet = $set;
-            foreach my $name (sort keys %msgs) {
-                my $msg = parse_syslog_line($msgs{$name});
-                delete $msg->{$_} for @_delete;
-                if ( !exists $resps{$name} ) {
-                    diag( Dumper $msg );
-                }
-                is_deeply( $msg, $resps{$name}, "$name ($set)" );
+        foreach my $name (sort keys %msgs) {
+            my $msg = parse_syslog_line($msgs{$name});
+            delete $msg->{$_} for @_delete;
+            if ( !exists $resps{$name} ) {
+                diag( Dumper $msg );
             }
+            is_deeply( $msg, $resps{$name}, "$name ($set_name)" );
         }
 
         # Disable Program extraction

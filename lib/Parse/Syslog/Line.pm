@@ -15,25 +15,19 @@ use Exporter;
 use HTTP::Date qw/parse_date str2time/;
 use Time::Moment;
 
-our $VERSION        = '3.4';
+const our $VERSION => '3.5';
 
-# Date handling
-our $DateParsing       = 1;
-our $DateTimeCreate    = 1;
-our $EpochCreate       = 0;
-
-our $NormalizeToUTC    = 0;
-our $IgnoreTimeZones   = 0;
-
+# Default for Handling Parsing
+our $DateParsing     = 1;
+our $DateTimeCreate  = 1;
+our $EpochCreate     = 1;
+our $NormalizeToUTC  = 0;
+our $IgnoreTimeZones = 0;
+our $ExtractProgram  = 1;
+our $PruneRaw        = 0;
+our $PruneEmpty      = 0;
+our @PruneFields     = ();
 our $FmtDate;
-
-our $ExtractProgram    = 1;
-
-our $PruneRaw          = 0;
-our $PruneEmpty        = 0;
-our @PruneFields       = ();
-
-our $RegexSet          = 'stable';
 
 =head1 SYNOPSIS
 
@@ -172,71 +166,36 @@ our %EXPORT_TAGS = (
     with_timezones  => [ qw(parse_syslog_line set_syslog_timezone get_syslog_timezone use_utc_syslog) ],
 );
 
-# Regex to Support Matches
- my %RE = (
-    IPv4    => qr/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/,
-);
-
 # Regex to Extract Data
-my %REGEXP = (
-    stable => {
-        preamble        => qr/^\<(\d+)\>/,
-        date            => qr/^(?:\d{4} )?([a-zA-Z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
-        date_long => qr/^
-                (?:[0-9]{4}\s+)?                # Year: Because, Cisco
-                ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
-                [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
-                (?:\s+[0-9]{4})?                # Year: Because, Cisco
-                \s+                             # Date Separator: spaces
-                [0-9]{1,2}(?:\:[0-9]{2}){1,2}   # Time: HH:MM or HH:MM:SS
-                (?:\.[0-9]{3,6})?               # Time: .DDD(DDD) ms resolution
-                (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
-                (?:\:?)                         # Cisco adds a : after the second timestamp
-        /x,
-        date_iso8601    => qr/^(
-                [0-9]{4}(\-[0-9]{2}){2}         # Date YYYY-MM-DD
-                (\s|T)                          # Date Separator T or ' '
-                [0-9]{2}(\:[0-9]{2}){1,2}       # Time HH:MM:SS
-                (?:\.(?:[0-9]{3}){1,2})?        # Time: .DDD millisecond or .DDDDDD microsecond resolution
-                ([Zz]|[+\-][0-9]{2}\:[0-9]{2})  # UTC Offset +DD:MM or 'Z' indicating UTC-0
-        )/x,
-        host            => qr/^\s*([^:\s]+)\s+/,
-        cisco_hates_you => qr/^\s*[0-9]*:\s+/,
-        program_raw     => qr/^\s*([^\[][^:]+):\s*/,
-        program_name    => qr/^([^\[\(\ ]+)/,
-        program_sub     => qr/\(([^\)]+)\)/,
-        program_pid     => qr/\[([^\]]+)\]/,
-        program_netapp  => qr/\[([^\]]+)\]:\s*/,
-    },
-    devel => {
-        preamble        => qr/^\<(\d+)\>/,
-        date            => qr/^(?:\d{4} )?([a-zA-Z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
-        date_long => qr/^
-                (?:[0-9]{4}\s+)?                # Year: Because, Cisco
-                ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
-                [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
-                (?:\s+[0-9]{4})?                # Year: Because, Cisco
-                \s+                             # Date Separator: spaces
-                [0-9]{1,2}(?:\:[0-9]{2}){1,2}   # Time: HH:MM or HH:MM:SS
-                (?:\.[0-9]{3,6})?               # Time: .DDD(DDD) ms resolution
-                (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
-                (?:\:?)                         # Cisco adds a : after the second timestamp
-        /x,
-        date_iso8601    => qr/^(
-                [0-9]{4}(?:\-[0-9]{2}){2}     # Date YYYY-MM-DD
-                (?:\s|T)                      # Date Separator T or ' '
-                [0-9]{2}(\:[0-9]{2}){1,2}   # Time HH:MM:SS
-                (?:\.(?:[0-9]{3}){1,2})?    # Time: .DDD millisecond or .DDDDDD microsecond resolution
-                ([Zz]|[+\-][0-9]{2}\:[0-9]{2})  # UTC Offset +DD:MM or 'Z' indicating UTC-0
-        )/x,
-        host            => qr/^\s*([^:\s]+)\s+/,
-        cisco_hates_you => qr/^\s*[0-9]*:\s+/,
-        program_raw     => qr/^\s*([^\[][^:]+):\s*/,
-        program_name    => qr/^([^\[\(\ ]+)/,
-        program_sub     => qr/\(([^\)]+)\)/,
-        program_pid     => qr/\[([^\]]+)\]/,
-        program_netapp  => qr/\[([^\]]+)\]:\s*/,
-    },
+const my %RE => (
+    IPv4            => qr/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/,
+    preamble        => qr/^\<(\d+)\>/,
+    date            => qr/^(?:\d{4} )?([a-zA-Z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
+    date_long => qr/^
+            (?:[0-9]{4}\s+)?                # Year: Because, Cisco
+            ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
+            [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
+            (?:\s+[0-9]{4})?                # Year: Because, Cisco
+            \s+                             # Date Separator: spaces
+            [0-9]{1,2}(?:\:[0-9]{2}){1,2}   # Time: HH:MM or HH:MM:SS
+            (?:\.[0-9]{3,6})?               # Time: .DDD(DDD) ms resolution
+            (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
+            (?:\:?)                         # Cisco adds a : after the second timestamp
+    /x,
+    date_iso8601    => qr/^(
+            [0-9]{4}(\-[0-9]{2}){2}         # Date YYYY-MM-DD
+            (\s|T)                          # Date Separator T or ' '
+            [0-9]{2}(\:[0-9]{2}){1,2}       # Time HH:MM:SS
+            (?:\.(?:[0-9]{3}){1,2})?        # Time: .DDD millisecond or .DDDDDD microsecond resolution
+            ([Zz]|[+\-][0-9]{2}\:[0-9]{2})  # UTC Offset +DD:MM or 'Z' indicating UTC-0
+    )/x,
+    host            => qr/^\s*([^:\s]+)\s+/,
+    cisco_hates_you => qr/^\s*[0-9]*:\s+/,
+    program_raw     => qr/^\s*([^\[][^:]+):\s*/,
+    program_name    => qr/^([^\[\(\ ]+)/,
+    program_sub     => qr/\(([^\)]+)\)/,
+    program_pid     => qr/\[([^\]]+)\]/,
+    program_netapp  => qr/\[([^\]]+)\]:\s*/,
 );
 
 =head1 VARIABLES
@@ -267,10 +226,11 @@ Usage:
 
 =head2 DateTimeCreate
 
-If this variable is set to 1 (the default), a DateTime object will be
-returned in the $m->{datetime_obj} field.  Otherwise, this will be skipped.
-NOTE: DateTime timezone calculation is fairly slow. Unless you really need
-to take timezones into account, you're better off using other modes (below).
+If this variable is set to 1 (the default), a DateTime object will be returned in the
+$m->{datetime_obj} field.  Otherwise, this will be skipped.
+
+NOTE: DateTime timezone calculation is fairly slow. Unless you really need to
+take timezones into account, you're better off using other modes (below).
 
 Usage:
 
@@ -357,16 +317,6 @@ Usage:
 
   @Parse::Syslog::Line::PruneFields = qw(date_raw facility_int priority_int);
 
-=head2 RegexSet
-
-Allows the use of different regex sets, the default is stable.  This is mostly a developer level
-feature to allow easy benchmarking of features against previous release.
-
-Usage:
-
-  $Parse::Syslog::Line::RegexSet = 'devel';
-
-
 =head1 FUNCTIONS
 
 =head2 parse_syslog_line
@@ -412,16 +362,13 @@ my $SYSLOG_TIMEZONE = 'local';
 sub parse_syslog_line {
     my ($raw_string) = @_;
 
-    # Verify we have a valid RegexSet
-    die "Invalid RegexSet '$RegexSet', valid are: ". join(", ", sort keys %REGEXP) unless exists $REGEXP{$RegexSet};
-
     # Initialize everything to undef
     my %msg =  $PruneEmpty ? () : %_empty_msg;
     $msg{message_raw} = $raw_string unless $PruneRaw;
 
     #
     # grab the preamble:
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{preamble}//o ) {
+    if( $raw_string =~ s/$RE{preamble}//o ) {
         # Cast to integer
         $msg{preamble} = int $1;
 
@@ -436,10 +383,10 @@ sub parse_syslog_line {
 
     #
     # Handle Date/Time
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{date}//o) {
+    if( $raw_string =~ s/$RE{date}//o) {
         $msg{datetime_raw} = $1;
     }
-    elsif( $raw_string =~ s/$REGEXP{$RegexSet}->{date_iso8601}//o) {
+    elsif( $raw_string =~ s/$RE{date_iso8601}//o) {
         $msg{datetime_raw} = $1;
     }
     if( exists $msg{datetime_raw} && length $msg{datetime_raw} ) {
@@ -529,7 +476,7 @@ sub parse_syslog_line {
 
     #
     # Host Information:
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{host}//o ) {
+    if( $raw_string =~ s/$RE{host}//o ) {
         my $hostStr = $1;
         my($ip) = ($hostStr =~ /($RE{IPv4})/o);
         if( defined $ip && length $ip ) {
@@ -543,9 +490,9 @@ sub parse_syslog_line {
             $msg{domain} = $domain;
         }
     }
-    if( $raw_string =~ s/$REGEXP{$RegexSet}->{cisco_hates_you}//o ) {
+    if( $raw_string =~ s/$RE{cisco_hates_you}//o ) {
         # Yes, Cisco adds a second timestamp to it's messages, because it hates you.
-        if( $raw_string =~ s/$REGEXP{$RegexSet}->{date_long}//o ) {
+        if( $raw_string =~ s/$RE{date_long}//o ) {
             # Cisco encodes the status of NTP in the second datestamp, so let's pass it back
             if ( my $ntp = $1 ) {
                 $msg{ntp} = $ntp eq '.' ? 'out of sync'
@@ -561,19 +508,19 @@ sub parse_syslog_line {
     #
     # Parse the Program portion
     if( $ExtractProgram ) {
-        if( $raw_string =~ s/$REGEXP{$RegexSet}->{program_raw}//o ) {
+        if( $raw_string =~ s/$RE{program_raw}//o ) {
             $msg{program_raw} = $1;
             my $progStr = join ' ', grep {!exists $INT_PRIORITY{$_}} split /\s+/, $msg{program_raw};
             if( defined $progStr && length $progStr) {
-                if( ($msg{program_name}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_name}/o) ) {
+                if( ($msg{program_name}) = ($progStr =~ /$RE{program_name}/o) ) {
                     if (length $msg{program_name} != length $msg{program_raw} ) {
-                        (($msg{program_pid}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_pid}/o))
-                            || (($msg{program_sub}) = ($progStr =~ /$REGEXP{$RegexSet}->{program_sub}/o))
+                        (($msg{program_pid}) = ($progStr =~ /$RE{program_pid}/o))
+                            || (($msg{program_sub}) = ($progStr =~ /$RE{program_sub}/o))
                     }
                 }
             }
         }
-        elsif( $raw_string =~ s/$REGEXP{$RegexSet}->{program_netapp}//o ) {
+        elsif( $raw_string =~ s/$RE{program_netapp}//o ) {
             # Check for a [host thing.subthing:level]: tag
             #          or [host:thing.subthing:level]: tag, Thanks NetApp.
             my $subStr = $1;

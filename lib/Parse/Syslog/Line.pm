@@ -15,7 +15,7 @@ use Exporter;
 use HTTP::Date qw/parse_date str2time/;
 use Time::Moment;
 
-our $VERSION = '3.5';
+our $VERSION = '3.6';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;

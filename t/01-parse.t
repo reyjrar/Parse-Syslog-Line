@@ -8,9 +8,11 @@ use Test::MockTime;
 
 # this avoids HTTP::Date weirdnes with dates "in the future"
 my $year = "2016";
-Test::MockTime::set_fixed_time("2016-12-31T23:59:59Z");
+Test::MockTime::set_fixed_time("2016-12-01T00:00:00Z");
 
 use Parse::Syslog::Line qw/:with_timezones/;
+
+set_syslog_timezone("UTC");
 
 my %msgs = (
     'Snort Message Parse'    => q|<11>Jan  1 00:00:00 mainfw snort[32640]: [1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161|,

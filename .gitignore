@@ -3,6 +3,7 @@
 .build
 inc
 blib
+Changes
 Parse-Syslog-Line-*
 MANIFEST
 Makefile

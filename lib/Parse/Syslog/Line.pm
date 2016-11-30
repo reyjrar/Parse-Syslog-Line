@@ -15,7 +15,7 @@ use Exporter;
 use HTTP::Date qw/parse_date str2time/;
 use Time::Moment;
 
-const our $VERSION => '3.5';
+our $VERSION = '3.5';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;
@@ -170,7 +170,8 @@ our %EXPORT_TAGS = (
 const my %RE => (
     IPv4            => qr/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/,
     preamble        => qr/^\<(\d+)\>/,
-    date            => qr/^(?:\d{4} )?([a-zA-Z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
+    year            => qr/^(\d{4}) /,
+    date            => qr/^([a-zA-Z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
     date_long => qr/^
             (?:[0-9]{4}\s+)?                # Year: Because, Cisco
             ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
@@ -383,6 +384,10 @@ sub parse_syslog_line {
 
     #
     # Handle Date/Time
+    my $year;
+    if( $raw_string =~ s/$RE{year}//o ) {
+        $year = $1;
+    }
     if( $raw_string =~ s/$RE{date}//o) {
         $msg{datetime_raw} = $1;
     }
@@ -401,10 +406,10 @@ sub parse_syslog_line {
             elsif( $DateTimeCreate ) {
                 # We need DateTime to interpret missing timezone offsets taking DST into account
                 my $dt = DateTime::Format::HTTP->parse_datetime(
-                    $msg{datetime_raw},
-                    $NormalizeToUTC
-                        ? _get_timezone_from_cache(get_syslog_timezone())
-                        : (),
+                        $msg{datetime_raw} . (defined $year ? " $year" : ''),
+                        $NormalizeToUTC
+                            ? _get_timezone_from_cache(get_syslog_timezone())
+                            : (),
                 );
 
                 my $tm;
@@ -437,13 +442,13 @@ sub parse_syslog_line {
                 }
             }
             elsif ( $EpochCreate ) {
-                $msg{epoch}        = HTTP::Date::str2time($msg{datetime_raw});
+                $msg{epoch}        = HTTP::Date::str2time($msg{datetime_raw} . (defined $year ? " $year" : ''));
                 $msg{datetime_str} = HTTP::Date::time2iso($msg{epoch});
             }
             elsif ( $IgnoreTimeZones ) {
 
                 # qw/year month day hour minute second/;
-                my @parsed = HTTP::Date::parse_date($msg{datetime_raw});
+                my @parsed = HTTP::Date::parse_date($msg{datetime_raw} . (defined $year ? " $year" : ''));
 
                 # if raw string contained timezone, ignore it explicitly
                 $msg{date}          = sprintf("%d-%02d-%02d", @parsed[0..2]);
@@ -457,6 +462,7 @@ sub parse_syslog_line {
                     $tm = Time::Moment->from_string($msg{datetime_raw}, lenient => 1);
                 };
                 if (not $EVAL_ERROR) {
+                    $tm->year($year) if defined $year;
 
                     $msg{date}         = $tm->strftime("%F");
                     $msg{'time'}       = $tm->strftime("%T%f");

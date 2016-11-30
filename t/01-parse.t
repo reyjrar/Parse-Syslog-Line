@@ -1,16 +1,14 @@
 #!perl
 
 use Test::More;
-
 use Data::Dumper;
 use DateTime;
 use Test::MockTime;
 
-my $dt = DateTime->now();
-my $year = $dt->year;
 
 # this avoids HTTP::Date weirdnes with dates "in the future"
-Test::MockTime::set_fixed_time("2016-01-01T00:00:01Z");
+my $year = "2016";
+Test::MockTime::set_fixed_time("2016-12-31T23:59:59Z");
 
 use Parse::Syslog::Line qw/:with_timezones/;
 

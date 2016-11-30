@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 3.4
+version 3.5
 
 # SYNOPSIS
 
@@ -92,10 +92,11 @@ Usage:
 
 ## DateTimeCreate
 
-If this variable is set to 1 (the default), a DateTime object will be
-returned in the $m->{datetime\_obj} field.  Otherwise, this will be skipped.
-NOTE: DateTime timezone calculation is fairly slow. Unless you really need
-to take timezones into account, you're better off using other modes (below).
+If this variable is set to 1 (the default), a DateTime object will be returned in the
+$m->{datetime\_obj} field.  Otherwise, this will be skipped.
+
+NOTE: DateTime timezone calculation is fairly slow. Unless you really need to
+take timezones into account, you're better off using other modes (below).
 
 Usage:
 
@@ -106,7 +107,7 @@ Usage:
 If this variable is set to 1, the number of seconds from UNIX epoch
 will be returned in the $m->{epoch} field.  If DateTimeCreate is
 not set, the parser will use `HTTP::Date` to perform the parsing.
-This is faster but assumes __local__ timezone if its not present in parsed string.
+This is faster but assumes **local** timezone if its not present in parsed string.
 In other words it ignores the timezone you set for syslog with set\_syslog\_timezone.
 
 Usage:
@@ -181,15 +182,6 @@ This should be an array of fields you'd like to be removed from the hash referen
 Usage:
 
     @Parse::Syslog::Line::PruneFields = qw(date_raw facility_int priority_int);
-
-## RegexSet
-
-Allows the use of different regex sets, the default is stable.  This is mostly a developer level
-feature to allow easy benchmarking of features against previous release.
-
-Usage:
-
-    $Parse::Syslog::Line::RegexSet = 'devel';
 
 # FUNCTIONS
 

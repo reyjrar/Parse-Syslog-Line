@@ -17,6 +17,7 @@ const my @msgs => (
     q|2013-08-09T11:09:36+02:00 hostname.company.tld : 2013 Aug  9 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)|,
     q|<134>Jan 1 11:28:13 filer-201.example.com [filer-201: scsitarget.ispfct.targetReset:notice]: FCP Target 0c: Target was Reset by the Initiator at Port Id: 0x11000 (WWPN 5001438021e071ec)|,
     q|2016-11-19T20:50:01.749659+01:00 janus CROND[14400]: (root) CMD (/usr/lib64/sa/sa1 1 1)|,
+    q|2015 Nov 13 13:40:01 ether rsyslogd-2177: imuxsock begins to drop messages from pid 17840 due to rate-limit|,
 );
 
 my $last = '';
@@ -35,10 +36,16 @@ my $results = timethese(50_000, {
         local $Parse::Syslog::Line::NormalizeToUTC  = 1;
         $stub->('Defaults w/normalize');
     },
-    'Epoch Only' => sub {
+    'EpochOnly' => sub {
         local $Parse::Syslog::Line::DateTimeCreate  = 0;
         local $Parse::Syslog::Line::EpochCreate     = 1;
         $stub->('Epoch Only');
+    },
+    'Recommended' => sub {
+        local $Parse::Syslog::Line::DateTimeCreate  = 0;
+        local $Parse::Syslog::Line::EpochCreate     = 1;
+        local $Parse::Syslog::Line::PruneEmpty      = 1;
+        $stub->('Recommended');
     },
     'Ignore Timezones' => sub {
         local $Parse::Syslog::Line::DateTimeCreate  = 0;

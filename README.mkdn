@@ -28,7 +28,7 @@ parsed out.
     #       time            => 'HH::MM:SS',
     #       epoch           => 1361095933,
     #       datetime_str    => 'YYYY-MM-DD HH:MM:SS',
-    #       datetime_obj    => new C<DateTime()> or C<Time::Moment> object, depending on the NormalizeToUTC switch
+    #       datetime_obj    => undef,       # Removed due to poor performance
     #       datetime_utc    => ISO 8601 UTC datetime # If $NormalizeToUTC or returned by FmtDate formatter
     #       datetime_raw    => 'Feb 17 11:12:13'
     #       date_raw        => 'Feb 17 11:12:13'
@@ -237,7 +237,8 @@ a hash reference as such:
 
 This module is developed with Dist::Zilla.  To build from the repository, use Dist::Zilla:
 
-    dzil authordeps |cpanm
+    dzil authordeps --missing |cpanm
+    dzil listdeps --missing |cpanm
     dzil build
     dzil test
 

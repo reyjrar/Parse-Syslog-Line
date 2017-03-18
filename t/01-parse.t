@@ -2,7 +2,6 @@
 
 use Test::More;
 use Data::Dumper;
-use DateTime;
 use Test::MockTime;
 
 
@@ -12,7 +11,7 @@ Test::MockTime::set_fixed_time("2016-12-01T00:00:00Z");
 
 use Parse::Syslog::Line qw/:with_timezones/;
 
-set_syslog_timezone("UTC");
+set_syslog_timezone($ENV{TZ} || 'UTC');
 
 my %msgs = (
     'Snort Message Parse'    => q|<11>Jan  1 00:00:00 mainfw snort[32640]: [1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161|,
@@ -220,7 +219,7 @@ my %resps = (
            'ntp' => 'ok',
             message_raw => qq|$year-01-01T11:09:36+02:00 hostname.company.tld : $year Jan  1 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)|,
            'priority' => undef,
-           'time' => '11:09:36',
+           'time' => '09:09:36',
            'date' => qq{$year-01-01},
            'content' => 'Interface Ethernet121/1/1 is down(Config change)',
            'facility' => undef,
@@ -230,7 +229,7 @@ my %resps = (
            'program_raw' => '%ETHPORT-5-IF_DOWN_CFG_CHANGE',
            'date_raw' => qq{$year-01-01T11:09:36+02:00},
            'datetime_raw' => qq{$year-01-01T11:09:36+02:00},
-           'datetime_str' => qq{$year-01-01 11:09:36},
+           'datetime_str' => qq{$year-01-01 09:09:36},
            'priority_int' => undef,
            'preamble' => undef,
            'program_pid' => undef,
@@ -437,12 +436,12 @@ my %resps = (
            'domain' => undef,
            'message' => 'my-script.pl: {"lunchTime":1443612366.442}',
            'host_raw' => 'my-host',
-           'time' => '06:26:06',
+           'time' => '11:26:06',
            'priority_int' => undef,
            'host' => 'my-host',
            'program_sub' => undef,
            'preamble' => undef,
-           'datetime_str' => '2015-09-30 06:26:06'
+           'datetime_str' => '2015-09-30 11:26:06'
     },
     'Year with old date' => {
            'priority' => undef,
@@ -468,7 +467,7 @@ my %resps = (
     },
     'High Precision Dates' => {
            'program_pid' => '14400',
-           'datetime_str' => '2016-11-19 20:50:01',
+           'datetime_str' => '2016-11-19 19:50:01',
            'content' => '(root) CMD (/usr/lib64/sa/sa1 1 1)',
            'priority_int' => undef,
            'message_raw' => '2016-11-19T20:50:01.749659+01:00 janus CROND[14400]: (root) CMD (/usr/lib64/sa/sa1 1 1)',
@@ -477,7 +476,7 @@ my %resps = (
            'program_name' => 'CROND',
            'program_sub' => undef,
            'preamble' => undef,
-           'time' => '20:50:01',
+           'time' => '19:50:01',
            'facility_int' => undef,
            'host_raw' => 'janus',
            'host' => 'janus',
@@ -491,8 +490,8 @@ my %resps = (
 );
 
 my @test_configs = (
-    { 'Defaults'        => { 'DateTimeCreate' => 1, 'EpochCreate' => 0, 'IgnoreTimeZones' => 0, 'NormalizeToUTC' => 0, }, },
-    { 'IgnoreTimeZones' => { 'DateTimeCreate' => 0, 'EpochCreate' => 0, 'IgnoreTimeZones' => 1, 'NormalizeToUTC' => 0, }, },
+    { 'Defaults'        => { 'EpochCreate' => 0, 'IgnoreTimeZones' => 0, 'NormalizeToUTC' => 0, }, },
+    { 'IgnoreTimeZones' => { 'EpochCreate' => 0, 'IgnoreTimeZones' => 1, 'NormalizeToUTC' => 0, }, },
 );
 
 foreach my $set (@test_configs) {
@@ -501,7 +500,6 @@ foreach my $set (@test_configs) {
 
     subtest $set_name => sub {
         local ( # localized to subtest scope
-            $Parse::Syslog::Line::DateTimeCreate,
             $Parse::Syslog::Line::EpochCreate,
             $Parse::Syslog::Line::IgnoreTimeZones,
             $Parse::Syslog::Line::NormalizeToUTC,
@@ -509,7 +507,7 @@ foreach my $set (@test_configs) {
 
         _set_test_config( $config );
 
-        my @_delete = qw(datetime_obj epoch);
+        my @_delete = qw(datetime_obj epoch datetime_local datetime_utc);
 
         foreach my $name (sort keys %msgs) {
             my $msg = parse_syslog_line($msgs{$name});
@@ -545,7 +543,6 @@ subtest 'Custom parser' => sub {
         return $modified, undef, undef, undef, undef;
     }
 
-    local $Parse::Syslog::Line::DateTimeCreate = 0;
     local $Parse::Syslog::Line::FmtDate = \&parse_func;
 
     foreach my $name (sort keys %msgs) {

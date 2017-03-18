@@ -7,22 +7,22 @@ use strict;
 
 use Carp;
 use Const::Fast;
-use DateTime;
-use DateTime::Format::HTTP;
 use DateTime::TimeZone;
 use English qw/-no_match_vars/;
 use Exporter;
-use HTTP::Date qw/parse_date str2time/;
-use Time::Moment;
+use HTTP::Date;
+use Module::Load;
+use Time::Zone;
 
 our $VERSION = '3.6';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;
-our $DateTimeCreate  = 1;
+our $DateTimeCreate  = 0;
 our $EpochCreate     = 1;
 our $NormalizeToUTC  = 0;
 our $IgnoreTimeZones = 0;
+
 our $ExtractProgram  = 1;
 our $PruneRaw        = 0;
 our $PruneEmpty      = 0;
@@ -51,7 +51,7 @@ parsed out.
     #       time            => 'HH::MM:SS',
     #       epoch           => 1361095933,
     #       datetime_str    => 'YYYY-MM-DD HH:MM:SS',
-    #       datetime_obj    => new C<DateTime()> or C<Time::Moment> object, depending on the NormalizeToUTC switch
+    #       datetime_obj    => undef,       # Removed due to poor performance
     #       datetime_utc    => ISO 8601 UTC datetime # If $NormalizeToUTC or returned by FmtDate formatter
     #       datetime_raw    => 'Feb 17 11:12:13'
     #       date_raw        => 'Feb 17 11:12:13'
@@ -358,7 +358,8 @@ my %_empty_msg = map { $_ => undef } qw(
 
 # Initialize syslog timezone
 # It can be changed by set_syslog_timezone() later.
-my $SYSLOG_TIMEZONE = 'local';
+my $SYSLOG_TIMEZONE = sprintf "%s%s", tz_name(), tz_local_offset() / 3600;
+my $WarnedDateTime = 0;
 
 sub parse_syslog_line {
     my ($raw_string) = @_;
@@ -398,84 +399,37 @@ sub parse_syslog_line {
         $msg{date_raw} = $msg{datetime_raw};
 
         if ( $DateParsing ) {
-
             # if User wants to fight with dates himself, let him :)
             if( $FmtDate && ref $FmtDate eq 'CODE' ) {
                 @msg{qw(date time epoch datetime_str datetime_utc)} = $FmtDate->($msg{datetime_raw});
             }
-            elsif( $DateTimeCreate ) {
-                # We need DateTime to interpret missing timezone offsets taking DST into account
-                my $dt = DateTime::Format::HTTP->parse_datetime(
-                        $msg{datetime_raw} . (defined $year ? " $year" : ''),
-                        $NormalizeToUTC
-                            ? _get_timezone_from_cache(get_syslog_timezone())
-                            : (),
-                );
+            else {
+                local $ENV{TZ} = $IgnoreTimeZones ? 'UTC' : $SYSLOG_TIMEZONE;
 
-                my $tm;
-                if ($NormalizeToUTC) {
-                    eval {
-                        $tm = Time::Moment->from_object($dt);
-                    };
-
-                    if (not $EVAL_ERROR) {
-
-                        $msg{date}         = $tm->strftime("%F");
-                        $msg{'time'}       = $tm->strftime("%T%f");
-                        $msg{offset}       = $tm->strftime("%Z");
-                        $msg{epoch}        = $tm->epoch;
-                        $msg{datetime_str} = "$tm";
-                        $msg{datetime_obj} = $tm;
-                        $msg{datetime_utc} = '' . $tm->at_utc
-                    }
-                    else {
-                        carp sprintf(qq/Error parsing "%s" - "%s"/, $msg{datetime_raw}, $EVAL_ERROR);
-                        @msg{qw/date time epoch datetime_str datetime_utc datetime_obj/} = undef;
-                    }
-                } else {
-                    $msg{date}         = $dt->ymd('-');
-                    $msg{'time'}       = $dt->hms;
-                    $msg{epoch}        = $dt->epoch if $EpochCreate;
-
-                    $msg{datetime_obj} = $dt;
-                    $msg{datetime_str} = $dt->ymd('-') . ' ' . $dt->hms;
-                }
+                $msg{epoch}          = HTTP::Date::str2time($msg{datetime_raw} . (defined $year ? " $year" : ''));
+                $msg{datetime_local} = HTTP::Date::time2iso($msg{epoch});
+                $msg{datetime_utc}   = HTTP::Date::time2isoz($msg{epoch});
+                $msg{datetime_str}   = $NormalizeToUTC ? $msg{datetime_utc} : $msg{datetime_local};
+                @msg{qw(date time)}  = split /\s+/, $msg{datetime_str};
+                printf("Parsed: %s to [%d] %s (%s) %s\n",
+                    @msg{qw(datetime_raw epoch datetime_local)},
+                    $SYSLOG_TIMEZONE,
+                    $IgnoreTimeZones ? 'na' : $msg{datetime_utc},
+                ) if $ENV{DEBUG_PARSE_SYSLOG_LINE};
             }
-            elsif ( $EpochCreate ) {
-                $msg{epoch}        = HTTP::Date::str2time($msg{datetime_raw} . (defined $year ? " $year" : ''));
-                $msg{datetime_str} = HTTP::Date::time2iso($msg{epoch});
-            }
-            elsif ( $IgnoreTimeZones ) {
-
-                # qw/year month day hour minute second/;
-                my @parsed = HTTP::Date::parse_date($msg{datetime_raw} . (defined $year ? " $year" : ''));
-
-                # if raw string contained timezone, ignore it explicitly
-                $msg{date}          = sprintf("%d-%02d-%02d", @parsed[0..2]);
-                $msg{'time'}        = sprintf("%02d:%02d:%02d", @parsed[3..5]);
-                $msg{datetime_str}  = sprintf("%s %s", $msg{date}, $msg{'time'});
-            }
-            elsif ($NormalizeToUTC) {
-
-                my $tm;
+            # Use Module::Load to runtime load the DateTime libraries *if* necessary
+            if( $DateTimeCreate ) {
+                warn "DateTime seriously degrades performance, please start using 'epoch' and/or 'datetime_str' instead."
+                    unless $WarnedDateTime++;
                 eval {
-                    $tm = Time::Moment->from_string($msg{datetime_raw}, lenient => 1);
+                    load DateTime;
+                    1;
+                } or do {
+                    my $err = $@;
+                    warn "DateTime unavailable, disabling it: $err";
+                    $DateTimeCreate = 0;
                 };
-                if (not $EVAL_ERROR) {
-                    $tm->year($year) if defined $year;
-
-                    $msg{date}         = $tm->strftime("%F");
-                    $msg{'time'}       = $tm->strftime("%T%f");
-                    $msg{offset}       = $tm->strftime("%Z");
-                    $msg{epoch}        = $tm->epoch;
-                    $msg{datetime_str} = "$tm";
-                    $msg{datetime_obj} = $tm;
-                    $msg{datetime_utc} = '' . $tm->at_utc
-                }
-                else {
-                    carp sprintf(qq/Error parsing "%s" - "%s"/, $msg{datetime_raw}, $EVAL_ERROR);
-                    @msg{qw/date time epoch datetime_str datetime_utc datetime_obj/} = undef;
-                }
+                $msg{datetime_obj} = DateTime->from_epoch(epoch => $msg{epoch}) if $DateTimeCreate;
             }
         }
     }
@@ -625,46 +579,18 @@ sub preamble_facility {
 # and instead use the offset provided (when the offset is not present in the log file) - which is
 # probably not what you want.
 #
-# NOTE: It automatically sets the DateTimeCreate and NormalizeToUTC variables for convenience. You can change them later
-# if you wish to use the timezone in Epoch only  calculations, for example.
 sub set_syslog_timezone {
     my ( $tz_name ) = @_;
-    $SYSLOG_TIMEZONE = $tz_name // 'local';
-
-    # ensure we're going the right path in that big "if tree"
-    $DateTimeCreate = 1;
-    $NormalizeToUTC = 1;
-
-    return _get_timezone_from_cache($SYSLOG_TIMEZONE);
+    $SYSLOG_TIMEZONE = $tz_name if $tz_name;
 }
 
 sub get_syslog_timezone {
     return $SYSLOG_TIMEZONE;
 }
 
-# timezone object cache
-my %tz_cache;
-
-# retrieves DateTime::TimeZone object of for a timezone $tz_name from cache.
-# if not found, it will be instantiated and put in cache
-sub _get_timezone_from_cache {
-    my ($tz_name) = @_;
-
-    $tz_name //= 'local';
-
-    return $tz_cache{$tz_name} if ( exists $tz_cache{$tz_name} );
-    $tz_cache{$tz_name} = DateTime::TimeZone->new(name => $tz_name);
-
-    return $tz_cache{$tz_name};
-}
-
 # If you have a syslog which logs dates in UTC, then processing will be much, much faster
 sub use_utc_syslog {
-
     set_syslog_timezone('UTC');
-    $DateTimeCreate     = 0;
-    $EpochCreate        = 0;
-    $IgnoreTimeZones    = 0;
     $NormalizeToUTC     = 1;
     return;
 }
@@ -676,7 +602,8 @@ __END__
 
 This module is developed with Dist::Zilla.  To build from the repository, use Dist::Zilla:
 
-    dzil authordeps |cpanm
+    dzil authordeps --missing |cpanm
+    dzil listdeps --missing |cpanm
     dzil build
     dzil test
 

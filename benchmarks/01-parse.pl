@@ -44,10 +44,6 @@ my $results = timethese(50_000, {
         local $Parse::Syslog::Line::PruneEmpty      = 1;
         $stub->('PruneEmpty');
     },
-    'IgnoreTimezones' => sub {
-        local $Parse::Syslog::Line::IgnoreTimeZones = 1;
-        $stub->('IgnoreTimezones');
-    },
     'No Dates, Pruned' => sub {
         local $Parse::Syslog::Line::DateParsing     = 0;
         local $Parse::Syslog::Line::PruneRaw        = 1;

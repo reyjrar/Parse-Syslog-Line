@@ -186,11 +186,11 @@ const my %RE => (
             (?:\:?)                         # Cisco adds a : after the second timestamp
     /x,
     date_iso8601    => qr/^(
-            [0-9]{4}(\-[0-9]{2}){2}         # Date YYYY-MM-DD
-            (?:\s|T)                        # Date Separator T or ' '
-            [0-9]{2}(\:[0-9]{2}){1,2}       # Time HH:MM:SS
-            (?:\.(?:[0-9]{3}){1,2})?        # Time: .DDD millisecond or .DDDDDD microsecond resolution
-            ([Zz]|[+\-][0-9]{2}\:[0-9]{2})  # UTC Offset +DD:MM or 'Z' indicating UTC-0
+            [0-9]{4}(?:\-[0-9]{2}){2}        # Date YYYY-MM-DD
+            (?:\s|T)                         # Date Separator T or ' '
+            [0-9]{2}(?:\:[0-9]{2}){1,2}      # Time HH:MM:SS
+            (?:\.(?:[0-9]{3}){1,2})?         # Time: .DDD millisecond or .DDDDDD microsecond resolution
+            (?:[Zz]|[+\-][0-9]{2}\:[0-9]{2}) # UTC Offset +DD:MM or 'Z' indicating UTC-0
     )/x,
     host            => qr/^\s*([^:\s]+)\s+/,
     cisco_hates_you => qr/^\s*[0-9]*:\s+/,

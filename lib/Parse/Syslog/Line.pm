@@ -338,6 +338,7 @@ be set to the UTC equivalent.
 my %_empty_msg = map { $_ => undef } qw(
     preamble priority priority_int facility facility_int
     datetime_raw date_raw date time datetime_str datetime_obj epoch
+    datetime_local datetime_utc offset
     host_raw host domain
     program_raw program_name program_pid program_sub
 );

@@ -53,8 +53,6 @@ parsed out.
     #       epoch           => 1361095933,
     #       datetime_str    => ISO 8601 datetime, $NormalizeToUTC = 1 then UTC, else local
     #       datetime_obj    => undef,       # If $DateTimeCreate = 1, else undef
-    #       datetime_utc    => ISO 8601 UTC datetime
-    #       datetime_local  => ISO 8601 local datetime
     #       datetime_raw    => 'Feb 17 11:12:13'
     #       date_raw        => 'Feb 17 11:12:13'
     #       host_raw        => 'hostname',  # Hostname as it appeared in the message
@@ -170,11 +168,11 @@ our %EXPORT_TAGS = (
 
 # Regex to Extract Data
 const my %RE => (
-    IPv4            => qr/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/,
-    preamble        => qr/^\<(\d+)\>/,
-    year            => qr/^(\d{4}) /,
-    date            => qr/^([a-zA-Z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
-    date_long => qr/^
+    IPv4            => qr/(?>(?:[0-9]{1,3}\.){3}[0-9]{1,3})/,
+    preamble        => qr/(?>^\<(\d+)\>)/,
+    year            => qr/(?>^(\d{4}) )/,
+    date            => qr/(?>^([A-Za-z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2}))/,
+    date_long => qr/^(?>
             (?:[0-9]{4}\s+)?                # Year: Because, Cisco
             ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
             [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
@@ -184,21 +182,21 @@ const my %RE => (
             (?:\.[0-9]{3,6})?               # Time: .DDD(DDD) ms resolution
             (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
             (?:\:?)                         # Cisco adds a : after the second timestamp
-    /x,
-    date_iso8601    => qr/^(
+    )/x,
+    date_iso8601    => qr/(?>^(
             [0-9]{4}(?:\-[0-9]{2}){2}        # Date YYYY-MM-DD
             (?:\s|T)                         # Date Separator T or ' '
             [0-9]{2}(?:\:[0-9]{2}){1,2}      # Time HH:MM:SS
             (?:\.(?:[0-9]{3}){1,2})?         # Time: .DDD millisecond or .DDDDDD microsecond resolution
             (?:[Zz]|[+\-][0-9]{2}\:[0-9]{2}) # UTC Offset +DD:MM or 'Z' indicating UTC-0
-    )/x,
+    ))/x,
     host            => qr/^\s*([^:\s]+)\s+/,
     cisco_hates_you => qr/^\s*[0-9]*:\s+/,
     program_raw     => qr/^\s*([^\[][^:]+):\s*/,
     program_name    => qr/^([^\[\(\ ]+)/,
-    program_sub     => qr/\(([^\)]+)\)/,
-    program_pid     => qr/\[([^\]]+)\]/,
-    program_netapp  => qr/\[([^\]]+)\]:\s*/,
+    program_sub     => qr/(?>\(([^\)]+)\))/,
+    program_pid     => qr/(?>\[([^\]]+)\])/,
+    program_netapp  => qr/(?>\[([^\]]+)\]:\s*)/,
 );
 
 =head1 VARIABLES
@@ -258,8 +256,8 @@ datetime_str and datetime_local fields.
 =head2 FmtDate
 
 You can pass your own formatter/parser here. Given a raw datetime string it
-should output a list containing date, time, epoch, datetime_str, datetime_utc,
-datetime_local in your wanted format.
+should output a list containing date, time, epoch, datetime_str,
+in your wanted format.
 
     use Parse::Syslog::Line;
 
@@ -270,8 +268,6 @@ datetime_local in your wanted format.
             #time
             #epoch
             #datetime_str
-            #datetime_utc
-            #datetime_local
         );
         return @elements;
     };
@@ -321,7 +317,7 @@ $DateParsing set to 0.
 Sets a timezone $timezone_name for parsed messages. This timezone will be used
 to calculate offset from UTC if a timezone designation is not present in the
 message being parsed.  This timezone will also serve as the source timezone for
-the datetime_local field.
+the datetime_str field.
 
 =head2 get_syslog_timezone
 
@@ -338,7 +334,6 @@ be set to the UTC equivalent.
 my %_empty_msg = map { $_ => undef } qw(
     preamble priority priority_int facility facility_int
     datetime_raw date_raw date time datetime_str datetime_obj epoch
-    datetime_local datetime_utc offset
     host_raw host domain
     program_raw program_name program_pid program_sub
 );
@@ -389,33 +384,32 @@ sub parse_syslog_line {
         if ( $DateParsing ) {
             # if User wants to fight with dates himself, let him :)
             if( $FmtDate && ref $FmtDate eq 'CODE' ) {
-                @msg{qw(date time epoch datetime_str datetime_utc datetime_local)} = $FmtDate->($msg{datetime_raw});
+                @msg{qw(date time epoch datetime_str)} = $FmtDate->($msg{datetime_raw});
             }
             else {
                 # Parse the Epoch
                 $msg{epoch} = HTTP::Date::str2time($msg{datetime_raw});
 
                 # Format accordingly, keep highest resolution we can
-                my $diff    = ($msg{epoch} - int($msg{epoch}));
-                my $hires   = $diff > 0 ? substr(sprintf('%0.6f', $diff),1) : '';
-                my $loc_fmt = '%FT%T' . $hires . ( $OutputTimeZone ? ($SYSLOG_TIMEZONE eq 'UTC' ? 'Z' : '%z') : '' );
-                my $utc_fmt = '%FT%T' . $hires . ( $OutputTimeZone ? 'Z' : '' );
+                my $diff   = ($msg{epoch} - int($msg{epoch}));
+                my $hires  = $diff > 0 ? substr(sprintf('%0.6f', $diff),1) : '';
+                my $tm_fmt = '%FT%T' . $hires . ( $OutputTimeZone ? ($SYSLOG_TIMEZONE eq 'UTC' ? 'Z' : '%z') : '' );
 
                 # Set the Date Strings
-                $msg{datetime_local} = strftime($loc_fmt, localtime $msg{epoch});
-                $msg{datetime_utc}   = strftime($utc_fmt, gmtime $msg{epoch});
-                $msg{datetime_str}   = $NormalizeToUTC ? $msg{datetime_utc} : $msg{datetime_local};
+                $msg{datetime_str} = $NormalizeToUTC ? strftime($tm_fmt, gmtime $msg{epoch})
+                                   				     : strftime($tm_fmt, localtime $msg{epoch});
                 # Split this up into parts
-                my @parts            = split /[ T]/, $msg{datetime_str};
-                $msg{date}           = $parts[0];
-                $msg{time}           = (split /[+\-Z]/, $parts[1])[0];
-                $msg{offset}         = $SYSLOG_TIMEZONE eq 'UTC' ? 'Z' : strftime('%z', localtime($msg{epoch}));
+                my @parts    = split /[ T]/, $msg{datetime_str};
+                $msg{date}   = $parts[0];
+                $msg{time}   = (split /[+\-Z]/, $parts[1])[0];
+                $msg{offset} = $NormalizeToUTC ? 'Z'
+                             : $parts[1] =~ /([Z+\-].*)/ ? $1
+							 : $SYSLOG_TIMEZONE;
 
                 # Debugging for my sanity
-                printf("Parsed: %s to [%s] %s (%s) %s\n",
-                    @msg{qw(datetime_raw epoch datetime_local)},
+                printf("TZ=%s Parsed: %s to [%s] %s D:%s T:%s O:%s\n",
                     $SYSLOG_TIMEZONE,
-                    $msg{datetime_utc},
+                    @msg{qw(datetime_raw epoch datetime_str date time offset)},
                 ) if $ENV{DEBUG_PARSE_SYSLOG_LINE};
             }
             # Use Module::Load to runtime load the DateTime libraries *if* necessary
@@ -433,7 +427,7 @@ sub parse_syslog_line {
                     $DateTimeTried++;
                 }
                 eval {
-                    my %args = (epoch => $msg{epoch},);
+                    my %args = (epoch => $msg{epoch});
                     $args{time_zone} = $SYSLOG_TIMEZONE if $SYSLOG_TIMEZONE;
                     $msg{datetime_obj} = DateTime->from_epoch(%args);
                 } if $DateTimeCreate;

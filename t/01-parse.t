@@ -494,7 +494,7 @@ my @test_configs = (
 );
 
 subtest "Basic Functionality Test" => sub {
-    my @_delete = qw(datetime_obj epoch datetime_local datetime_utc offset);
+    my @_delete = qw(datetime_obj epoch offset);
 
     foreach my $name (sort keys %msgs) {
         my $msg = parse_syslog_line($msgs{$name});
@@ -532,7 +532,7 @@ subtest 'Custom parser' => sub {
     local $Parse::Syslog::Line::FmtDate = \&parse_func;
 
     foreach my $name (sort keys %msgs) {
-        foreach my $part (@dtfields, qw/datetime_utc datetime_local/) {
+        foreach my $part (@dtfields) {
             $resps{$name}{$part} = undef;
         }
         $resps{$name}{date} = "[" . $resps{$name}{datetime_raw} . "]";

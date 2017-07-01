@@ -124,6 +124,7 @@ subtest 'Millisecond resolution' => sub {
     while (my ($case_name, $msg) = each %utc_syslogs) {
         my $exp = dclone($expects{$case_name});
         my $tz  = exists $exp->{_set_tz} ? delete $exp->{_set_tz} : 'UTC';
+        delete $exp->{datetime_utc};
         set_syslog_timezone($tz);
         cmp_deeply(
             parse_syslog_line($msg),
@@ -143,9 +144,9 @@ subtest 'config switching' => sub {
         my $exp = dclone($expects{$case_name});
         # Adjust expected to the UTC values
         delete $exp->{_set_tz};
-        $exp->{datetime_str} = $exp->{datetime_utc};
-        $exp->{time}         = (split /[\sTZ]/, $exp->{datetime_utc})[1];
-        $exp->{offset}       = 'Z';
+        $exp->{datetime_str} = delete $exp->{datetime_utc};
+        $exp->{time}    = ($exp->{datetime_str} =~ /[ T](\d{2}(?::\d{2}){2}(?:\.\d+)?)/)[0];
+        $exp->{offset}  = 'Z';
         use YAML;
         cmp_deeply(
             parse_syslog_line($msg),

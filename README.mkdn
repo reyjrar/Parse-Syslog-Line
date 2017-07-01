@@ -4,7 +4,7 @@ Parse::Syslog::Line - Simple syslog line parser
 
 # VERSION
 
-version 3.6
+version 3.7
 
 # SYNOPSIS
 
@@ -29,8 +29,6 @@ parsed out.
     #       epoch           => 1361095933,
     #       datetime_str    => ISO 8601 datetime, $NormalizeToUTC = 1 then UTC, else local
     #       datetime_obj    => undef,       # If $DateTimeCreate = 1, else undef
-    #       datetime_utc    => ISO 8601 UTC datetime
-    #       datetime_local  => ISO 8601 local datetime
     #       datetime_raw    => 'Feb 17 11:12:13'
     #       date_raw        => 'Feb 17 11:12:13'
     #       host_raw        => 'hostname',  # Hostname as it appeared in the message
@@ -117,13 +115,13 @@ When set, the datetime\_str will be ISO8601 UTC.
 
 Default is false, but is enabled if you call set\_syslog\_timezone() or
 use\_utc\_syslog().  If enabled, this will append the timezone offset to the
-datetime\_str and datetime\_local fields.
+datetime\_str.
 
 ## FmtDate
 
 You can pass your own formatter/parser here. Given a raw datetime string it
-should output a list containing date, time, epoch, datetime\_str, datetime\_utc,
-datetime\_local in your wanted format.
+should output a list containing date, time, epoch, datetime\_str,
+in your wanted format.
 
     use Parse::Syslog::Line;
 
@@ -134,8 +132,6 @@ datetime\_local in your wanted format.
             #time
             #epoch
             #datetime_str
-            #datetime_utc
-            #datetime_local
         );
         return @elements;
     };
@@ -184,7 +180,7 @@ $DateParsing set to 0.
 Sets a timezone $timezone\_name for parsed messages. This timezone will be used
 to calculate offset from UTC if a timezone designation is not present in the
 message being parsed.  This timezone will also serve as the source timezone for
-the datetime\_local field.
+the datetime\_str field.
 
 ## get\_syslog\_timezone
 

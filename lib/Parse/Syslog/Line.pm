@@ -14,7 +14,7 @@ use Module::Load   qw( load );
 use Module::Loaded qw( is_loaded );
 use POSIX          qw( strftime tzset );
 
-our $VERSION = '3.6';
+our $VERSION = '3.7';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;
@@ -251,7 +251,7 @@ When set, the datetime_str will be ISO8601 UTC.
 
 Default is false, but is enabled if you call set_syslog_timezone() or
 use_utc_syslog().  If enabled, this will append the timezone offset to the
-datetime_str and datetime_local fields.
+datetime_str.
 
 =head2 FmtDate
 

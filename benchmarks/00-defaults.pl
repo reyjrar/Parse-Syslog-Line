@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Benchmark qw( timethese );
+use Dumbbench;
 use Const::Fast;
 use Parse::Syslog::Line;
 
@@ -28,10 +28,15 @@ my $stub = sub {
     $last=$test;
     parse_syslog_line(shift @copy);
 };
-my $results = timethese(50_000, {
-    'Defaults' => sub {
-        $stub->('Defaults');
-    },
-});
 
-print "Done.\n";
+my $bench = Dumbbench->new(
+    target_rel_precision => 0.005,
+    initial_runs         => 1000,
+);
+
+$bench->add_instances(
+    Dumbbench::Instance::PerlSub->new( code => sub { $stub->('Defaults') } ),
+);
+
+$bench->run();
+$bench->report();

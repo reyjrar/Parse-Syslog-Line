@@ -36,6 +36,15 @@ my $bench = Dumbbench->new(
 
 $bench->add_instances(
     Dumbbench::Instance::PerlSub->new(
+        name => 'Recommended',
+        code => sub {
+            local $Parse::Syslog::Line::DateTimeCreate  = 0;
+            local $Parse::Syslog::Line::EpochCreate     = 1;
+            local $Parse::Syslog::Line::PruneEmpty      = 1;
+            $stub->('Recommended');
+        },
+    ),
+    Dumbbench::Instance::PerlSub->new(
         name => 'DateTimeCreate',
         code => sub {
             local $Parse::Syslog::Line::DateTimeCreate  = 1;

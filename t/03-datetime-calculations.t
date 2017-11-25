@@ -16,6 +16,8 @@ use Storable qw(dclone);
 
 use Parse::Syslog::Line qw/:with_timezones/;
 
+set_syslog_timezone('UTC');
+
 subtest 'If logdate is "in the future" it is actually "in the past"' => sub {
 
     # default settings
@@ -23,7 +25,7 @@ subtest 'If logdate is "in the future" it is actually "in the past"' => sub {
     my $msg = parse_syslog_line(q|<11>Mar  27 01:59:59 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|);
 
     cmp_deeply($msg, superhashof({
-        datetime_str => '2016-03-27T01:59:59',
+        datetime_str => '2016-03-27T01:59:59Z',
         datetime_raw => 'Mar  27 01:59:59',
     }), 'date is "in the past" - intuitive behaviour');
 
@@ -31,7 +33,7 @@ subtest 'If logdate is "in the future" it is actually "in the past"' => sub {
     $msg = parse_syslog_line(q|<11>Mar  27 01:59:59 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3|);
 
     cmp_deeply($msg, superhashof({
-        datetime_str => '2015-03-27T01:59:59',
+        datetime_str => '2015-03-27T01:59:59Z',
         datetime_raw => 'Mar  27 01:59:59',
     }), 'date is "in the future" - HTTP::Date assumes it is in the past and finds a date match from previous year');
 

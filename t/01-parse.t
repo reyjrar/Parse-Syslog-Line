@@ -14,6 +14,7 @@ Test::MockTime::set_fixed_time("2016-12-01T00:00:00Z");
 
 use Parse::Syslog::Line qw/:with_timezones/;
 
+# Avoid Issues with not being able to source timezone
 set_syslog_timezone('UTC');
 
 my %msgs = (

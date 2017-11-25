@@ -14,7 +14,7 @@ use Module::Load   qw( load );
 use Module::Loaded qw( is_loaded );
 use POSIX          qw( strftime tzset );
 
-our $VERSION = '4.0';
+our $VERSION = '4.1';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;
@@ -397,14 +397,14 @@ sub parse_syslog_line {
 
                 # Set the Date Strings
                 $msg{datetime_str} = $NormalizeToUTC ? strftime($tm_fmt, gmtime $msg{epoch})
-                                   				     : strftime($tm_fmt, localtime $msg{epoch});
+                                                     : strftime($tm_fmt, localtime $msg{epoch});
                 # Split this up into parts
                 my @parts    = split /[ T]/, $msg{datetime_str};
                 $msg{date}   = $parts[0];
                 $msg{time}   = (split /[+\-Z]/, $parts[1])[0];
                 $msg{offset} = $NormalizeToUTC ? 'Z'
                              : $parts[1] =~ /([Z+\-].*)/ ? $1
-							 : $SYSLOG_TIMEZONE;
+                             : $SYSLOG_TIMEZONE;
 
                 # Debugging for my sanity
                 printf("TZ=%s Parsed: %s to [%s] %s D:%s T:%s O:%s\n",
@@ -508,7 +508,7 @@ sub parse_syslog_line {
         delete $msg{$_} for grep { $_ =~ /_raw$/ } keys %msg;
     }
     if( $PruneEmpty ) {
-        delete $msg{$_} for grep { !defined $msg{$_} } keys %msg;
+        delete $msg{$_} for grep { !defined $msg{$_} || !length $msg{$_} } keys %msg;
     }
     if( @PruneFields ) {
         no warnings;

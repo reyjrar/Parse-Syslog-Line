@@ -14,7 +14,7 @@ use Module::Load   qw( load );
 use Module::Loaded qw( is_loaded );
 use POSIX          qw( strftime tzset );
 
-our $VERSION = '4.1';
+our $VERSION = '4.2';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;

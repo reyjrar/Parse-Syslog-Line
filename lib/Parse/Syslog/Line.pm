@@ -23,6 +23,7 @@ our $EpochCreate     = 1;
 our $NormalizeToUTC  = 0;
 our $OutputTimeZone  = 0;
 our $IgnoreTimeZones = 0;
+our $HiResFmt        = '%0.6f';
 
 our $ExtractProgram  = 1;
 our $PruneRaw        = 0;
@@ -218,8 +219,8 @@ Usage:
 
 =head2 DateParsing
 
-If this variable is set to 0 raw date will not be parsed further into components (datetime_str date time epoch).
-Default is 1 (parsing enabled).
+If this variable is set to 0 raw date will not be parsed further into
+components (datetime_str date time epoch).  Default is 1 (parsing enabled).
 
 Usage:
 
@@ -275,9 +276,16 @@ in your wanted format.
 
 B<NOTE>: No further date processing will be done, you're on your own here.
 
+=head2 HiResFmt
+
+Default is C<%0.6f>, or microsecond resolution.  This variable only comes into
+play when the syslog date string contains a high resolution timestamp.  It
+defaults to using microsecond resolution.
+
 =head2 PruneRaw
 
-This variable defaults to 0, set to 1 to delete all keys in the return hash ending in "_raw"
+This variable defaults to 0, set to 1 to delete all keys in the return hash
+ending in "_raw"
 
 Usage:
 
@@ -285,7 +293,8 @@ Usage:
 
 =head2 PruneEmpty
 
-This variable defaults to 0, set to 1 to delete all keys in the return hash which are undefined.
+This variable defaults to 0, set to 1 to delete all keys in the return hash
+which are undefined.
 
 Usage:
 
@@ -391,8 +400,12 @@ sub parse_syslog_line {
                 $msg{epoch} = HTTP::Date::str2time($msg{datetime_raw});
 
                 # Format accordingly, keep highest resolution we can
-                my $diff   = ($msg{epoch} - int($msg{epoch}));
-                my $hires  = $diff > 0 ? substr(sprintf('%0.6f', $diff),1) : '';
+                my $diff  = ($msg{epoch} - int($msg{epoch}));
+                my $hires = '';
+                if( $diff ) {
+                    $msg{epoch} = sprintf $HiResFmt, $msg{epoch};
+                    $hires      = substr(sprintf($HiResFmt,$diff),1);
+                }
                 my $tm_fmt = '%FT%T' . $hires . ( $OutputTimeZone ? ($SYSLOG_TIMEZONE eq 'UTC' ? 'Z' : '%z') : '' );
 
                 # Set the Date Strings

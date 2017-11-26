@@ -13,6 +13,7 @@ use DateTime;
 use DateTime::TimeZone;
 use Time::Moment;
 use Storable qw(dclone);
+use YAML  ();
 
 use Parse::Syslog::Line qw/:with_timezones/;
 
@@ -112,13 +113,13 @@ my %expects = (
         date => '2015-09-30', 'time' => '06:26:06.779373', offset => '-0500',
         datetime_str => "2015-09-30T06:26:06.779373-0500",
         datetime_utc => '2015-09-30T11:26:06.779373Z',
-        epoch        => Time::Moment->from_string("2015-09-30T06:26:06.779373-05:00")->epoch . '.77937',
+        epoch        => Time::Moment->from_string("2015-09-30T06:26:06.779373-05:00")->epoch . '.779373',
     },
     'ISO8601 with micro - zulu' => {
         date => '2015-09-30', 'time' => '06:26:06.779373', offset => 'Z',
         datetime_str => "2015-09-30T06:26:06.779373Z",
         datetime_utc => '2015-09-30T06:26:06.779373Z',
-        epoch        => Time::Moment->from_string("2015-09-30T06:26:06.779373Z")->epoch . '.77937',
+        epoch        => Time::Moment->from_string("2015-09-30T06:26:06.779373Z")->epoch . '.779373',
     },
 );
 
@@ -128,11 +129,12 @@ subtest 'Millisecond resolution' => sub {
         my $tz  = exists $exp->{_set_tz} ? delete $exp->{_set_tz} : 'UTC';
         delete $exp->{datetime_utc};
         set_syslog_timezone($tz);
+        my $got = parse_syslog_line($msg);
         cmp_deeply(
-            parse_syslog_line($msg),
+            $got,
             superhashof($exp),
             $case_name,
-        );
+        ) || diag YAML::Dump $got;
     }
     done_testing();
 };
@@ -149,12 +151,12 @@ subtest 'config switching' => sub {
         $exp->{datetime_str} = delete $exp->{datetime_utc};
         $exp->{time}    = ($exp->{datetime_str} =~ /[ T](\d{2}(?::\d{2}){2}(?:\.\d+)?)/)[0];
         $exp->{offset}  = 'Z';
-        use YAML;
+        my $got = parse_syslog_line($msg);
         cmp_deeply(
-            parse_syslog_line($msg),
+            $got,
             superhashof($exp),
             $case_name,
-        ) || Dump parse_syslog_line($msg);
+        ) || diag YAML::Dump $got;
     }
     done_testing();
 };

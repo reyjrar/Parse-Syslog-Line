@@ -577,16 +577,11 @@ sub preamble_facility {
 sub set_syslog_timezone {
     my ( $tz_name ) = @_;
 
-    if( defined $tz_name && (!exists $ENV{TZ} || $tz_name ne $ENV{TZ}) ) {
+    if( defined $tz_name && length $tz_name ) {
         $ENV{TZ} = $SYSLOG_TIMEZONE = $tz_name;
         tzset();
+        # Output Timezones
         $OutputTimeZone = 1;
-        # Output some useful debug information
-        printf("set_syslog_timezone('%s') results in a timezone of '%s' with offset: %s\n",
-                $tz_name,
-                strftime('%Z', localtime),
-                strftime('%z', localtime),
-            ) if $ENV{DEBUG_PARSE_SYSLOG_LINE};
     }
 
     return $SYSLOG_TIMEZONE;

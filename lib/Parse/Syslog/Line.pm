@@ -13,8 +13,9 @@ use HTTP::Date     qw( str2time );
 use Module::Load   qw( load );
 use Module::Loaded qw( is_loaded );
 use POSIX          qw( strftime tzset );
+use Ref::Util      qw( is_arrayref );
 
-our $VERSION = '4.2';
+our $VERSION = '4.3';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;
@@ -25,10 +26,12 @@ our $OutputTimeZone  = 0;
 our $IgnoreTimeZones = 0;
 our $HiResFmt        = '%0.6f';
 
-our $ExtractProgram  = 1;
-our $PruneRaw        = 0;
-our $PruneEmpty      = 0;
-our @PruneFields     = ();
+our $ExtractProgram      = 1;
+our $AutoDetectJSON      = 0;
+our $AutoDetectKeyValues = 0;
+our $PruneRaw            = 0;
+our $PruneEmpty          = 0;
+our @PruneFields         = ();
 our $FmtDate;
 
 =head1 SYNOPSIS
@@ -40,6 +43,7 @@ parsed out.
     use Parse::Syslog::Line qw(parse_syslog_line);
 
     $Parse::Syslog::Line::DateTimeCreate = 1;
+    $Parse::Syslog::Line::AutoDetectJSON = 1;
 
     my $href = parse_syslog_line( $msg );
     #
@@ -67,6 +71,7 @@ parsed out.
     #       message         => 'program[pid]: the rest of the message',
     #       message_raw     => 'The message as it was passed',
     #       ntp             => 'ok',           # Only set for Cisco messages
+    #       SDATA           => { ... },  # Decoded JSON or K/V Pairs in the message
     # };
     ...
 
@@ -282,6 +287,23 @@ Default is C<%0.6f>, or microsecond resolution.  This variable only comes into
 play when the syslog date string contains a high resolution timestamp.  It
 defaults to using microsecond resolution.
 
+=head2 AutoDetectJSON
+
+Default is false.  If true, we'll autodetect the presence of JSON in the syslog
+message and use L<JSON::MaybeXS> to decode it.  The detection/decoding is
+simple.  If a '{' is detected, everything until the end of the message is
+assumed to be JSON.  The decoded JSON will be added to the C<SDATA> field.
+
+    $Parse::Syslog::Line::AutoDetectJSON = 1;
+
+=head2 AutoDetectKeyValues
+
+Default is false.  If true, we'll autodetect the presence of Splunk style
+key/value pairds in the message stream.  That format is C<k1=v1, k2=v2>.
+Resulting K/V pairs will be added to the C<SDATA> field.
+
+    $Parse::Syslog::Line::AutoDetectKeyValues = 1;
+
 =head2 PruneRaw
 
 This variable defaults to 0, set to 1 to delete all keys in the return hash
@@ -350,6 +372,7 @@ my %_empty_msg = map { $_ => undef } qw(
 
 my $SYSLOG_TIMEZONE = '';
 my $DateTimeTried = 0;
+my $JSONTried = 0;
 
 sub parse_syslog_line {
     my ($raw_string) = @_;
@@ -516,6 +539,48 @@ sub parse_syslog_line {
     $msg{content} = $raw_string;
     chomp $msg{content};
     $msg{message} = defined $msg{program_raw} ? "$msg{program_raw}: $msg{content}" : $msg{content};
+
+    if( $AutoDetectJSON && (my $pos = index($msg{content},'{')) >= 0 ) {
+        unless( $JSONTried && is_loaded('JSON::MaybeXS') ) {
+            eval {
+                load JSON::MaybeXS, "decode_json";
+                1;
+            } or do {
+                my $err = $@;
+                warn "JSON::MaybeXS unavailable, disabling it: $err";
+                $AutoDetectJSON = 0;
+            };
+            $JSONTried++;
+        }
+        if( $AutoDetectJSON ) {
+            eval {
+                $msg{SDATA} = decode_json(substr($msg{content},$pos));
+                1;
+            } or do {
+                my $err = $@;
+                $msg{_json_error} = sprintf "Failed to decode json: %s", $err;
+            };
+        }
+    }
+    elsif( $AutoDetectKeyValues && $msg{content} =~ /\w+=\w+/ ) {
+        my %sdata = ();
+        while( $msg{content} =~ /(\w+)=([^\s,]+)/g ) {
+            my ($k,$v) = ($1,$2);
+            if( exists $sdata{$k} ) {
+                if( is_arrayref($sdata{$k}) ) {
+                    push @{ $sdata{$k} }, $v;
+                }
+                else {
+                    # Auto Promote to an Array Ref
+                    $sdata{$k} = [ $sdata{$k}, $v ];
+                }
+            }
+            else {
+                $sdata{$k} = $v;
+            }
+        }
+        $msg{SDATA} = \%sdata if keys %sdata;
+    }
 
     if( $PruneRaw ) {
         delete $msg{$_} for grep { $_ =~ /_raw$/ } keys %msg;

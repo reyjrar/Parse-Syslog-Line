@@ -252,7 +252,7 @@ This module is developed with Dist::Zilla.  To build from the repository, use Di
 
 # AUTHOR
 
-Brad Lhotsky &lt;brad@divisionbyzero.net>
+Brad Lhotsky <brad@divisionbyzero.net>
 
 # COPYRIGHT AND LICENSE
 
@@ -264,13 +264,13 @@ This is free software, licensed under:
 
 # CONTRIBUTORS
 
-- Bartłomiej Fulanty &lt;starlight@cpan.org>
-- Csillag Tamas &lt;cstamas@digitus.itk.ppke.hu>
-- Keedi Kim &lt;keedi.k@gmail.com>
-- Mateu X Hunter &lt;mhunter@maxmind.com>
-- Neil Bowers &lt;neil@bowers.com>
-- Shawn Wilson &lt;swilson@korelogic.com>
-- Tomohiro Hosaka &lt;bokutin@bokut.in>
+- Bartłomiej Fulanty <starlight@cpan.org>
+- Csillag Tamas <cstamas@digitus.itk.ppke.hu>
+- Keedi Kim <keedi.k@gmail.com>
+- Mateu X Hunter <mhunter@maxmind.com>
+- Neil Bowers <neil@bowers.com>
+- Shawn Wilson <swilson@korelogic.com>
+- Tomohiro Hosaka <bokutin@bokut.in>
 
 # SUPPORT
 

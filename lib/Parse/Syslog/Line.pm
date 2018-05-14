@@ -552,7 +552,7 @@ sub parse_syslog_line {
     $msg{message} = defined $msg{program_raw} ? "$msg{program_raw}: $msg{content}" : $msg{content};
 
     if( $AutoDetectJSON && (my $pos = index($msg{content},'{')) >= 0 ) {
-        unless( $JSONTried && is_loaded('JSON::MaybeXS') ) {
+        unless( $JSONTried || is_loaded('JSON::MaybeXS') ) {
             eval {
                 load JSON::MaybeXS, "decode_json";
                 1;

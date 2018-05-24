@@ -562,10 +562,14 @@ sub parse_syslog_line {
             };
         }
     }
-    elsif( $AutoDetectKeyValues && $msg{content} =~ /\w+=\w+/ ) {
+    elsif( $AutoDetectKeyValues && $msg{content} =~ /\s[a-zA-Z\.0-9\-_]+=\S+/ ) {
         my %sdata = ();
-        while( $msg{content} =~ /(\w+)=([^\s,]+)/g ) {
+        while( $msg{content} =~ /\s\K([a-zA-Z\.0-9\-_]+)=(.+?)(?=(?:\s*[,;]|$|\s[a-zA-Z\.0-9\-_]+=))/g ) {
             my ($k,$v) = ($1,$2);
+            # Remove Trailing Brackets
+            chop($v) if $v =~ /[)\]>]$/;
+            # Remove Leading Brackets
+            $v = substr($v,1) if $v =~ /^[(\[<]/;
             if( exists $sdata{$k} ) {
                 if( is_arrayref($sdata{$k}) ) {
                     push @{ $sdata{$k} }, $v;

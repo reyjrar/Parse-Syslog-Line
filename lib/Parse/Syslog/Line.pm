@@ -175,10 +175,10 @@ our %EXPORT_TAGS = (
 # Regex to Extract Data
 const my %RE => (
     IPv4            => qr/(?>(?:[0-9]{1,3}\.){3}[0-9]{1,3})/,
-    preamble        => qr/(?>^\<(\d+)\>)/,
-    year            => qr/(?>^(\d{4}) )/,
-    date            => qr/(?>^([A-Za-z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2}))/,
-    date_long => qr/^(?>
+    preamble        => qr/^\<(\d+)\>/,
+    year            => qr/^(\d{4}) /,
+    date            => qr/^([A-Za-z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
+    date_long => qr/^
             (?:[0-9]{4}\s+)?                # Year: Because, Cisco
             ([.*])?                         # Cisco adds a * for no ntp, and a . for configured but out of sync
             [a-zA-Z]{3}\s+[0-9]+            # Date: Jan  1
@@ -188,14 +188,14 @@ const my %RE => (
             (?:\.[0-9]{3,6})?               # Time: .DDD(DDD) ms resolution
             (?:\s+[A-Z]{3,4})?              # Timezone, ZZZ or ZZZZ
             (?:\:?)                         # Cisco adds a : after the second timestamp
-    )/x,
-    date_iso8601    => qr/(?>^(
+    /x,
+    date_iso8601    => qr/^(
             [0-9]{4}(?:\-[0-9]{2}){2}        # Date YYYY-MM-DD
             (?:\s|T)                         # Date Separator T or ' '
             [0-9]{2}(?:\:[0-9]{2}){1,2}      # Time HH:MM:SS
             (?:\.(?:[0-9]{3}){1,2})?         # Time: .DDD millisecond or .DDDDDD microsecond resolution
             (?:[Zz]|[+\-][0-9]{2}\:[0-9]{2}) # UTC Offset +DD:MM or 'Z' indicating UTC-0
-    ))/x,
+    )/x,
     host            => qr/^\s*([^:\s]+)\s+/,
     cisco_hates_you => qr/^\s*[0-9]*:\s+/,
     program_raw     => qr/^\s*([^\[][^:]+):\s*/,
@@ -414,7 +414,7 @@ sub parse_syslog_line {
         $msg{date_raw} = $msg{datetime_raw};
 
         if ( $DateParsing ) {
-            # if User wants to fight with dates himself, let him :)
+            # if User wants to fight with dates themselves, let them :)
             if( $FmtDate && ref $FmtDate eq 'CODE' ) {
                 @msg{qw(date time epoch datetime_str)} = $FmtDate->($msg{datetime_raw});
             }

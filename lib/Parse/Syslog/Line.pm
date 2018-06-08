@@ -577,10 +577,10 @@ sub parse_syslog_line {
         my %sdata = ();
         while( $msg{content} =~ /(?:^|\s)\K(?>([a-zA-Z\.0-9\-_]++))=(\S+(?:\s+\S+)*?)(?=(?:\s*[,;]|$|\s+[a-zA-Z\.0-9\-_]+=))/g ) {
             my ($k,$v) = ($1,$2);
-            # Remove Trailing Brackets
-            chop($v) if $v =~ /[)\]>]$/;
-            # Remove Leading Brackets
-            $v = substr($v,1) if $v =~ /^[(\[<]/;
+            # Remove Trailing Characters
+            $v =~ s/[)\]>,;'"]+$//;
+            # Remove Leading Characters
+            $v =~ s/^[(\[<'"]+//;
             if( exists $sdata{$k} ) {
                 if( is_arrayref($sdata{$k}) ) {
                     push @{ $sdata{$k} }, $v;

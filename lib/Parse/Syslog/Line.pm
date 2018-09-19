@@ -15,7 +15,7 @@ use Module::Loaded qw( is_loaded );
 use POSIX          qw( strftime tzset );
 use Ref::Util      qw( is_arrayref );
 
-our $VERSION = '4.4';
+our $VERSION = '4.5';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;
@@ -161,6 +161,8 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw(parse_syslog_line);
 our @EXPORT_OK = qw(
     parse_syslog_line
+    parse_syslog_lines
+    parse_last_line
     preamble_priority preamble_facility
     %LOG_FACILITY %LOG_PRIORITY
     get_syslog_timezone set_syslog_timezone
@@ -604,6 +606,41 @@ sub parse_syslog_line {
     #
     # Return our hash reference!
     return \%msg;
+}
+
+=head2 parse_syslog_lines
+
+=head2 parse_last_line
+
+=cut
+
+{
+    my $buffer = '';
+    sub parse_syslog_lines {
+        my @lines = grep { defined and length } map { split /\r?\n/, $_ } @_;
+        my @structured = ();
+        while( my $line = shift @lines ) {
+            if( $line =~ /^\s/ ) {
+                $buffer .= $line . "\n";
+                next;
+            }
+            else {
+                push @structured, parse_syslog_line($buffer);
+                $buffer = $line;
+            }
+        }
+        return \@structured;
+    }
+
+    sub parse_last_line {
+        if( $buffer and length $buffer ) {
+            my $result =  parse_syslog_line($buffer)
+            $buffer = '';
+            return $result;
+        }
+        return;
+    }
+
 }
 
 =head2 preamble_priority

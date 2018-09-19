@@ -381,6 +381,9 @@ sub parse_syslog_line {
     my %msg =  $PruneEmpty ? () : %_empty_msg;
     $msg{message_raw} = $raw_string unless $PruneRaw;
 
+    # Lines that begin with a space aren't syslog messages, skip
+    return \%msg if $raw_string =~ /^\s/;
+
     #
     # grab the preamble:
     if( $raw_string =~ s/$RE{preamble}//o ) {

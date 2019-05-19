@@ -201,7 +201,7 @@ const my %RE => (
     host            => qr/^\s*([^:\s]+)\s+/,
     cisco_hates_you => qr/^\s*[0-9]*:\s+/,
     program_raw     => qr/^\s*([^\[][^:]+):\s*/,
-    program_name    => qr/^([^\[\(\ ]+)/,
+    program_name    => qr/^([^\[\(\ ]+)(.*)/,
     program_sub     => qr/(?>\(([^\)]+)\))/,
     program_pid     => qr/(?>\[([^\]]+)\])/,
     program_netapp  => qr/(?>\[([^\]]+)\]:\s*)/,
@@ -513,12 +513,18 @@ sub parse_syslog_line {
         if( $raw_string =~ s/$RE{program_raw}//o ) {
             $msg{program_raw} = $1;
             my $progStr = join ' ', grep {!exists $INT_PRIORITY{$_}} split /\s+/, $msg{program_raw};
-            if( defined $progStr && length $progStr) {
-                if( ($msg{program_name}) = ($progStr =~ /$RE{program_name}/o) ) {
-                    if (length $msg{program_name} != length $msg{program_raw} ) {
-                        (($msg{program_pid}) = ($progStr =~ /$RE{program_pid}/o))
-                            || (($msg{program_sub}) = ($progStr =~ /$RE{program_sub}/o))
+            if( $progStr =~ /$RE{program_name}/o ) {
+                $msg{program_name} = $1;
+                my $remainder      = $2;
+                if ( $remainder ) {
+                    ($msg{program_pid}) = ($remainder =~ /$RE{program_pid}/o);
+                    ($msg{program_sub}) = ($remainder =~ /$RE{program_sub}/o);
+                    if( !$msg{program_sub}  ) {
+                        ($msg{program_sub}) = ($remainder =~ /^(?:\/)?([^\[(]+)/o);
                     }
+                }
+                if( $msg{program_name} !~ m{^/} && $msg{program_name} =~ tr{/}{} ) {
+                    @msg{qw(program_name program_sub)} = split m{/}, $msg{program_name}, 2;
                 }
             }
         }
@@ -634,7 +640,7 @@ sub parse_syslog_line {
 
     sub parse_last_line {
         if( $buffer and length $buffer ) {
-            my $result =  parse_syslog_line($buffer)
+            my $result =  parse_syslog_line($buffer);
             $buffer = '';
             return $result;
         }

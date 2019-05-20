@@ -520,7 +520,7 @@ sub parse_syslog_line {
                     ($msg{program_pid}) = ($remainder =~ /$RE{program_pid}/o);
                     ($msg{program_sub}) = ($remainder =~ /$RE{program_sub}/o);
                     if( !$msg{program_sub}  ) {
-                        ($msg{program_sub}) = ($remainder =~ /^(?:\/)?([^\[(]+)/o);
+                        ($msg{program_sub}) = ($remainder =~ /^(?:[\/\s])?([^\[(]+)/o);
                     }
                 }
                 if( $msg{program_name} !~ m{^/} && $msg{program_name} =~ tr{/}{} ) {

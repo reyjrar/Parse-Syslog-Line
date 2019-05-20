@@ -18,11 +18,17 @@ use Parse::Syslog::Line qw(:with_timezones);
 my ($opt,$usage) = describe_options('%c %o',
     ["Tool for generating test data from the command line"],
     [],
+    ['options|o|opt=s%',      "Options for Parse::Syslog::Line, ie -o AutoDetectKeyValues=1"],
     ['regenerate|r',     "Regenerate the data foreach existing test case"],
     ['noconfirm|auto|n', "Assume the results are valid, don't prompt for review"],
     [],
     [help => 'Display this help', { shortcircuit => 1 }],
 );
+
+if( $opt->help ) {
+    print $usage->text;
+    exit 0;
+}
 
 my $dataDir = path($FindBin::Bin)->parent->child('data');
 
@@ -31,6 +37,16 @@ set_syslog_timezone('UTC');
 
 # this avoids HTTP::Date weirdnes with dates "in the future"
 Test::MockTime::set_fixed_time("2018-12-01T00:00:00Z");
+
+my %Options = ();
+if ( $opt->options ) {
+    %Options = %{ $opt->options };
+    foreach my $k ( sort keys %Options ) {
+        no strict 'refs';
+        verbose({color=>'yellow'}, "Setting Parse::Syslog::Line::$k = $Options{$k}");
+        ${"Parse::Syslog::Line::$k"} = $Options{$k};
+    }
+}
 
 if( $opt->regenerate ) {
     $dataDir->visit(sub {
@@ -57,7 +73,11 @@ sub generate_test_data {
     die "Missing 'string' element in the test case"
         unless $entry->{string};
 
-    my $id = md5_hex($entry->{string});
+    my $id_str = $entry->{string};
+    $id_str   .= YAML::Dump( \%Options ) if $opt->options;
+    my $id = md5_hex($id_str);
+
+    $entry->{options}  = \%Options if $opt->options;
     $entry->{expected} = parse_syslog_line($entry->{string});
 
     output({clear => 1, color=>'cyan'}, $entry->{string});

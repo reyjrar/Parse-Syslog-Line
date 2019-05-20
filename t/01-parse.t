@@ -48,16 +48,34 @@ subtest "Basic Functionality Test" => sub {
     my @_delete = qw(datetime_obj epoch offset);
 
     foreach my $test (sort { $a->{name} cmp $b->{name} } @TESTS) {
+        my %restore = ();
+        # Adjust Test Settings
+        if( $test->{options} ) {
+            foreach my $k ( keys %{ $test->{options} } ) {
+                no strict 'refs';
+                $restore{$k} = ${"Parse::Syslog::Line::$k"};
+                ${"Parse::Syslog::Line::$k"} = $test->{options}{$k};
+            }
+        }
         my $msg = parse_syslog_line($test->{string});
         delete $msg->{$_} for grep { exists $msg->{$_} } @_delete;
         delete $test->{expected}{$_} for grep { exists $test->{expected}{$_} } @_delete;
         is_deeply( $msg, $test->{expected}, $test->{name} ) || diag( Dumper $test );
+        # Restore Defaults
+        if( keys %restore ) {
+            foreach my $k ( keys %restore ) {
+                no strict 'refs';
+                ${"Parse::Syslog::Line::$k"} = $restore{$k};
+            }
+        }
     }
 
     # Disable Program extraction
     do {
         local $Parse::Syslog::Line::ExtractProgram = 0;
         foreach my $test (sort { $a->{name} cmp $b->{name} } @TESTS) {
+            # Skip tests with specific options
+            next if exists $test->{options};
             my $msg = parse_syslog_line($test->{string});
             my %expected = %{ $test->{expected} };
             delete $msg->{$_} for @_delete;
@@ -81,6 +99,8 @@ subtest 'Custom parser' => sub {
     local $Parse::Syslog::Line::FmtDate = \&parse_func;
 
     foreach my $test (sort { $a->{name} cmp $b->{name} } @TESTS) {
+        # Skip tests with specific options
+        next if exists $test->{options};
         my %resp = %{ $test->{expected} };
         foreach my $part (@dtfields) {
             $resp{$part} = undef;

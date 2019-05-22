@@ -219,6 +219,30 @@ A convenient function which sets the syslog timezone to UTC and sets the config
 variables accordingly.  Automatically sets $NormaizeToUTC and datetime\_str will
 be set to the UTC equivalent.
 
+## parse\_syslog\_lines
+
+Returns a list of hashes of the lines interpretted.
+
+When passed one or more line of text, attempts to parse that text as syslog data.  This function
+varies from `parse_syslog_line` in that it handles multi-line messages.  The caveat to this, is
+after the last iteration of the loop, you to call the function by itself to get the last message.
+
+    use strict;
+    use warnings;
+    use DDP;
+    use Parse::Syslog::Line qw(parse_syslog_lines);
+
+    while(<>) {
+        foreach my $log ( parse_syslog_lines($_) ) {
+            p($log);
+        }
+    }
+    p($_) for parse_syslog_lines();
+
+This function holds a parsing buffer which it flushes any time it encounters a
+line in the stream that starts with non-whitespace.  Any lines beginning with
+whitespace will be assumed to be a continuation of the previous line.
+
 ## preamble\_priority
 
 Takes the Integer portion of the syslog messsage and returns

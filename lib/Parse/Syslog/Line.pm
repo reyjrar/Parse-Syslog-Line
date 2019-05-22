@@ -162,7 +162,6 @@ our @EXPORT = qw(parse_syslog_line);
 our @EXPORT_OK = qw(
     parse_syslog_line
     parse_syslog_lines
-    parse_last_line
     preamble_priority preamble_facility
     %LOG_FACILITY %LOG_PRIORITY
     get_syslog_timezone set_syslog_timezone
@@ -616,35 +615,56 @@ sub parse_syslog_line {
 
 =head2 parse_syslog_lines
 
-=head2 parse_last_line
+Returns a list of hashes of the lines interpretted.
+
+When passed one or more line of text, attempts to parse that text as syslog data.  This function
+varies from C<parse_syslog_line> in that it handles multi-line messages.  The caveat to this, is
+after the last iteration of the loop, you to call the function by itself to get the last message.
+
+    use strict;
+    use warnings;
+    use DDP;
+    use Parse::Syslog::Line qw(parse_syslog_lines);
+
+    while(<>) {
+        foreach my $log ( parse_syslog_lines($_) ) {
+            p($log);
+        }
+    }
+    p($_) for parse_syslog_lines();
+
+This function holds a parsing buffer which it flushes any time it encounters a
+line in the stream that starts with non-whitespace.  Any lines beginning with
+whitespace will be assumed to be a continuation of the previous line.
+
+It is not exported by default.
 
 =cut
 
 {
     my $buffer = '';
     sub parse_syslog_lines {
-        my @lines = grep { defined and length } map { split /\r?\n/, $_ } @_;
+        my @lines = map { split /\r?\n/, $_ } grep { defined } @_;
         my @structured = ();
-        while( my $line = shift @lines ) {
-            if( $line =~ /^\s/ ) {
-                $buffer .= $line . "\n";
-                next;
-            }
-            else {
-                push @structured, parse_syslog_line($buffer);
-                $buffer = $line;
+        if( @lines ) {
+            while( my $line = shift @lines ) {
+                if( $line =~ /^\s/ ) {
+                    $buffer .= "\n" . $line;
+                    next;
+                }
+                else {
+                    push @structured, parse_syslog_line($buffer);
+                    $buffer = $line;
+                }
             }
         }
-        return \@structured;
-    }
-
-    sub parse_last_line {
-        if( $buffer and length $buffer ) {
-            my $result =  parse_syslog_line($buffer);
+        else {
+            # grab the remaining buffer
+            push @structured, parse_syslog_line($buffer)
+                if length $buffer;
             $buffer = '';
-            return $result;
         }
-        return;
+        return @structured;
     }
 
 }

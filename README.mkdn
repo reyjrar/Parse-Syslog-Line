@@ -243,6 +243,8 @@ This function holds a parsing buffer which it flushes any time it encounters a
 line in the stream that starts with non-whitespace.  Any lines beginning with
 whitespace will be assumed to be a continuation of the previous line.
 
+It is not exported by default.
+
 ## preamble\_priority
 
 Takes the Integer portion of the syslog messsage and returns

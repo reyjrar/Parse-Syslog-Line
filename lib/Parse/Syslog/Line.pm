@@ -15,7 +15,7 @@ use Module::Loaded qw( is_loaded );
 use POSIX          qw( strftime tzset );
 use Ref::Util      qw( is_arrayref );
 
-our $VERSION = '4.5';
+our $VERSION = '4.6';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;

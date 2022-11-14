@@ -3,7 +3,7 @@
 package Parse::Syslog::Line;
 
 use v5.14;
-use strict;
+use warnings;
 
 use Carp;
 use Const::Fast;

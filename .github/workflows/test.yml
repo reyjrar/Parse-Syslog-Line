@@ -30,7 +30,7 @@ jobs:
           perl-version: ${{ matrix.perl }}
       # Setup dependencies
       - run: |
-          cpanm --notest Dist::Zilla
+          apt install -y libdist-zilla-perl
           dzil authordeps --missing | cpanm --notest
           dzil listdeps --missing | cpanm --notest
       - run: dzil test

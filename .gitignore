@@ -12,3 +12,4 @@ Makefile.old
 .cvsignore
 pm_to_blib
 MYMETA.*
+nytprof*

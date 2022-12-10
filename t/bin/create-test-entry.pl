@@ -1,6 +1,6 @@
 #!perl
 #
-use strict;
+use v5.16;
 use warnings;
 
 use CLI::Helpers qw(:all);
@@ -9,7 +9,7 @@ use FindBin;
 use Getopt::Long::Descriptive;
 use Path::Tiny qw(path);
 use Test::MockTime;
-use YAML ();
+use YAML::XS ();
 
 # We're in t/bin so ../../lib is the dist lib
 use lib "$FindBin::Bin/../../lib";
@@ -45,7 +45,7 @@ if( $opt->regenerate ) {
         # Only read YAML Data
         return unless $p->is_file and $p->stringify =~ /\.yaml/;
         # Reading is fatal if it fails, that's cool
-        my $contents = YAML::LoadFile( $p->stringify );
+        my $contents = YAML::XS::LoadFile( $p->stringify );
         # Generate the Test Case in a child to isolate test options
         if ( my $pid = fork() ) {
             while( wait() != -1 ) {}
@@ -84,16 +84,16 @@ sub generate_test_data {
 
     # Generate a Test ID
     my $id_str = $entry->{string};
-    $id_str .= YAML::Dump( $entry->{options} ) if $entry->{options};
+    $id_str .= YAML::XS::Dump( $entry->{options} ) if $entry->{options};
     my $id = $args{id} || md5_hex($id_str);
 
     output({clear => 1, color=>'cyan'}, $entry->{string});
-    output({indent => 1}, split /\r?\n/, YAML::Dump($entry->{expected}));
+    output({indent => 1}, split /\r?\n/, YAML::XS::Dump($entry->{expected}));
     return unless $opt->noconfirm or confirm("Does this look correct?");
     $entry->{name} ||= prompt("What name would you give this test? ", default => $id);
 
     my $file = $dataDir->child("${id}.yaml");
-    YAML::DumpFile( $file->absolute->stringify, $entry );
+    YAML::XS::DumpFile( $file->absolute->stringify, $entry );
     output({color=>'green'}, sprintf "Created %s for test: %s",
         $file->stringify,
         $entry->{name},

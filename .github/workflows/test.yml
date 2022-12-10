@@ -28,10 +28,7 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl }}
-      # Setup dependencies
-      - run: |
-          cpanm --notest Dist::Zilla
-          mv weaver{-ci,}.ini
-          dzil authordeps --missing | cpanm --notest
-          dzil listdeps --missing | cpanm --notest
-      - run: dzil test
+      - name: Install dependencies
+        run: cpm install
+      - name: Run Tests
+        run: prove -Ilib -v t

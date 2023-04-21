@@ -2,20 +2,21 @@
 
 package Parse::Syslog::Line;
 
-use v5.14;
+use v5.16;
 use warnings;
 
 use Carp;
 use Const::Fast;
 use English qw(-no_match_vars);
 use Exporter;
-use HTTP::Date     qw( str2time );
-use JSON::MaybeXS  qw( decode_json );
+use Hash::Merge::Simple qw( dclone_merge );
+use HTTP::Date          qw( str2time );
+use JSON::MaybeXS       qw( decode_json );
+use Module::Load        qw( load );
+use Module::Loaded      qw( is_loaded );
+use POSIX               qw( strftime tzset );
+use Ref::Util           qw( is_arrayref );
 # RECOMMEND PREREQ: Cpanel::JSON::XS
-use Module::Load   qw( load );
-use Module::Loaded qw( is_loaded );
-use POSIX          qw( strftime tzset );
-use Ref::Util      qw( is_arrayref );
 
 our $VERSION = '5.0';
 
@@ -698,13 +699,15 @@ sub parse_syslog_line {
                 unless $DisableWarnings;
             $CpanelJSONXSWarning = 1;
         }
+        my $json;
         eval {
-            $msg{SDATA} = decode_json(substr($msg{content},$pos));
+            $json = decode_json(substr($msg{content},$pos));
             1;
         } or do {
             my $err = $@;
             $msg{_json_error} = sprintf "Failed to decode json: %s", $err;
         };
+        $msg{SDATA} = dclone_merge($json,($msg{SDATA} || {})) if $json;
     }
     elsif( $AutoDetectKeyValues && $msg{content} =~ /(?:^|\s)[a-zA-Z\.0-9\-_]+=\S+/ ) {
         my %sdata = ();
@@ -727,14 +730,14 @@ sub parse_syslog_line {
                 $sdata{$k} = $v;
             }
         }
-        $msg{SDATA} = \%sdata if keys %sdata;
+        $msg{SDATA} = dclone_merge(\%sdata,($msg{SDATA} || {})) if %sdata;
     }
 
     if( $PruneRaw ) {
         delete $msg{$_} for grep { $_ =~ /_raw$/ } keys %msg;
     }
     if( $PruneEmpty ) {
-        delete $msg{$_} for grep { !defined $msg{$_} || !length $msg{$_} } keys %msg;
+        delete $msg{$_} for grep { !length $msg{$_} } keys %msg;
     }
     if( @PruneFields ) {
         no warnings;

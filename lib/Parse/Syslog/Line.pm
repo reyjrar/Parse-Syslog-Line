@@ -487,7 +487,6 @@ sub parse_syslog_line {
     # Lines that begin with a space aren't syslog messages, skip
     return \%msg if $raw_string =~ /^\s/;
 
-    #
     # grab the preamble:
     if( $raw_string =~ s/^$RE{preamble}//o ) {
         # Cast to integer

@@ -77,6 +77,7 @@ parsed out.
     #       message         => 'program[pid]: the rest of the message',
     #       message_raw     => 'The message as it was passed',
     #       ntp             => 'ok',        # Only set for Cisco messages
+    #       version         => 1,
     #       SDATA           => { ... },     # RFC Structured data, decoded JSON, or K/V Pairs in the message
     # };
     ...
@@ -182,7 +183,7 @@ our %EXPORT_TAGS = (
 # Regex to Extract Data
 const my %RE => (
     IPv4            => qr/(?>(?:[0-9]{1,3}\.){3}[0-9]{1,3})/,
-    preamble        => qr/^\<(\d+)\>/,
+    preamble        => qr/^\<(\d+)\>(\d{,2})\s*/,
     year            => qr/^(\d{4}) /,
     date            => qr/(?<date>[A-Za-z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
     date_long => qr/
@@ -491,6 +492,7 @@ sub parse_syslog_line {
     if( $raw_string =~ s/^$RE{preamble}//o ) {
         # Cast to integer
         $msg{preamble} = int $1;
+        $msg{version}  = int $2 if $2;
 
         # Extract Integers
         $msg{priority_int} = $msg{preamble} & $CONV_MASK{priority};

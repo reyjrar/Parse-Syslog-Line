@@ -17,7 +17,7 @@ use Module::Loaded qw( is_loaded );
 use POSIX          qw( strftime tzset );
 use Ref::Util      qw( is_arrayref );
 
-our $VERSION = '5.2';
+our $VERSION = '5.3';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;
@@ -183,7 +183,7 @@ our %EXPORT_TAGS = (
 # Regex to Extract Data
 const my %RE => (
     IPv4            => qr/(?>(?:[0-9]{1,3}\.){3}[0-9]{1,3})/,
-    preamble        => qr/^\<(\d+)\>(\d{,2})\s*/,
+    preamble        => qr/^\<(\d+)\>(\d{0,2})\s*/,
     year            => qr/^(\d{4}) /,
     date            => qr/(?<date>[A-Za-z]{3}\s+[0-9]+\s+[0-9]{1,2}(?:\:[0-9]{2}){1,2})/,
     date_long => qr/

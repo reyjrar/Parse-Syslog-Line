@@ -225,7 +225,7 @@ const my %RE => (
             )                                   # RETURN: Value, could be one word, or several
             (?=                                 # Zero width positive look-ahead
                 (?:                             # Clustering, non-grouping group one of:
-                    \s*[,;]                     #   Space, comma, or semicolon
+                    \s*[,;(\[]                  #   Space, comma, semicolon, open bracket or paren
                     |$                          #   End of string
                     |\s+[a-zA-Z\.0-9\-_]+=      #   A word, followed by an equal sign
                 )

@@ -1,8 +1,7 @@
 #!perl
 
-use strict;
+use v5.14;
 use warnings;
-use feature 'state';
 use Benchmark qw/timethese cmpthese/;
 use Const::Fast;
 use Parse::Syslog::Line;

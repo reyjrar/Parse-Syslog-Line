@@ -5,11 +5,12 @@ use warnings;
 
 use FindBin;
 use Data::Dumper;
-use Module::Load qw( load );
-use Path::Tiny qw(path);
 use Test::MockTime;
 use Test::More;
 use YAML::XS ();
+
+use lib "$FindBin::Bin/lib";
+use test::Data;
 
 use Parse::Syslog::Line qw/:with_timezones/;
 
@@ -19,40 +20,8 @@ set_syslog_timezone('UTC');
 # this avoids HTTP::Date weirdnes with dates "in the future"
 Test::MockTime::set_fixed_time("2018-12-01T00:00:00Z");
 
-my $dataDir = path("$FindBin::Bin")->child('data');
-my @TESTS = ();
-
-my $JSON_OK;
-eval {
-    load 'JSON::MaybeXS';
-    $JSON_OK++;
-};
-
-$dataDir->visit(sub {
-    my ($p) = @_;
-
-    # Skip non-yaml files
-    return unless $p->is_file and $p->stringify =~ /\.yaml/;
-
-    # Load the Test Data, fatal errors will cause test failures
-    eval {
-        my $test = YAML::XS::LoadFile( $p->stringify );
-        if( $test->{options} and $test->{options}{AutoDetectJSON} ) {
-            push @TESTS, $test if $JSON_OK;
-        }
-        else {
-            push @TESTS, $test;
-        }
-        1;
-    } or do {
-        my $err = $@;
-        fail(sprintf "loading YAML in %s failed: %s",
-            $p->stringify,
-            $err,
-        );
-    };
-});
-
+# Load Test Datas
+my @TESTS = values %{ get_test_data() };
 
 my @dtfields = qw/time datetime_obj epoch datetime_str/;
 

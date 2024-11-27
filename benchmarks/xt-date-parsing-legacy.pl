@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Benchmark qw(cmpthese);
-use DateTime::Format::HTTP;
 use HTTP::Date;
 use Time::Moment;
 use Time::Piece;
@@ -19,11 +18,6 @@ while(<DATA>) {
 }
 
 my %converters = (
-    DateTimeHTTP => sub {
-        my ($str) = @_;
-        my $dt = DateTime::Format::HTTP->parse_datetime($str);
-        return $dt->epoch;
-    },
     TimeMoment => sub {
         my ($str) = @_;
         my $tm = Time::Moment->from_string( $str, lenient => 1 );

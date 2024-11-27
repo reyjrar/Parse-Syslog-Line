@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use feature 'state';
 use Benchmark qw/timethese cmpthese/;
 use Const::Fast;
 use Parse::Syslog::Line;
@@ -13,80 +14,74 @@ use test::Data;
 # Disable warnings
 $ENV{PARSE_SYSLOG_LINE_QUIET} = 1;
 
-const my @msgs => map { $_->{string} } values %{ get_test_data() };
+const my $COUNT => 50_000;
 
-my $last = '';
-my @copy = ();
-my $stub = sub {
-    my ($test) = @_;
-    @copy = @msgs unless @copy and $last ne $test;
-    $last=$test;
-    parse_syslog_line(shift @copy);
-};
-my $results = timethese(50_000, {
-    'Defaults' => sub {
-        $stub->('Defaults');
+my %MESSAGES = ();
+foreach my $test ( sort { $a->{string} cmp $b->{string} } values %{ get_test_data() } ) {
+    my $type = $test->{expected}{datetime_raw} =~ /^\d{4}-\d{2}-\d{2}/ ? 'iso' : 'legacy';
+    push @{ $MESSAGES{$type} }, $test->{string};
+    push @{ $MESSAGES{mixed} }, $test->{string};
+}
+
+header(sprintf "Data sets loaded, messages in: ISO86001=%d, Legacy=%d, Mixed=%d",
+    scalar( @{ $MESSAGES{iso} } ),
+    scalar( @{ $MESSAGES{legacy} } ),
+    scalar( @{ $MESSAGES{mixed} } )
+);
+
+my $results = timethese($COUNT, {
+    Defaults   => make_test_sub('mixed'),
+    PruneEmpty => sub {
+        local $Parse::Syslog::Line::PruneEmpty = 1;
+        state $stub = make_test_sub();
+        $stub->();
     },
-    'PruneEmpty' => sub {
-        local $Parse::Syslog::Line::PruneEmpty      = 1;
-        $stub->('PruneEmpty');
+    NoDates => sub {
+        local $Parse::Syslog::Line::DateParsing = 0;
+        state $stub = make_test_sub();
+        $stub->();
     },
-    'NoDates' => sub {
-        local $Parse::Syslog::Line::DateParsing     = 0;
-        $stub->('No Dates');
-    },
-    'JSON' => sub {
+    JSON => sub {
         local $Parse::Syslog::Line::AutoDetectJSON = 1;
-        $stub->('JSON');
+        state $stub = make_test_sub();
+        $stub->();
     },
-    'KV' => sub {
+    KV => sub {
         local $Parse::Syslog::Line::AutoDetectKeyValues = 1;
-        $stub->('KV');
+        state $stub = make_test_sub();
+        $stub->();
     },
-    'NoRFCSDATA' => sub {
+    NoRFCSDATA => sub {
         local $Parse::Syslog::Line::RFC5424StructuredData = 0;
-        $stub->('NoRFCSDATA');
+        state $stub = make_test_sub();
+        $stub->();
     },
-    'StrictRFC' => sub {
+    StrictRFC => sub {
         local $Parse::Syslog::Line::RFC5424StructuredDataStrict = 1;
-        $stub->('StrictRFC');
+        state $stub = make_test_sub();
+        $stub->();
     },
-    'AutoSDATA' => sub {
+    AutoSDATA => sub {
         local $Parse::Syslog::Line::AutoDetectJSON = 1;
         local $Parse::Syslog::Line::AutoDetectKeyValues = 1;
-        $stub->('AutoSDATA');
+        state $stub = make_test_sub();
+        $stub->();
     },
 });
 
 print "\n";
 cmpthese($results);
-print "\nGood logfiles which have UTC offsets (like Cisco) run waaaay faster:\n";
 
-const my @utc_syslogs => (
-    q|2015-01-01T11:09:36+02:00 hostname.company.tld : $year Jan  1 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)|,
-    q|2015-09-30T06:26:06.779373-05:00 my-host my-script.pl: {"lunchTime":1443612366.442}|,
-    q|2015-09-30T06:26:06.779373Z my-host my-script.pl: {"lunchTime":1443612366.442}|,
-);
+header("Compare parse timings of ISO86001 and Legacy formats");
 
-@copy = @utc_syslogs;
-my $utc_stub = sub {
-    my ($test) = @_;
-    @copy = @utc_syslogs unless @copy and $test ne $last;
-    $last = $test;
-    parse_syslog_line( shift @copy );
-};
-my $results_pure = timethese(50_000, {
-    'NormalizeToUTC' => sub {
-        local $Parse::Syslog::Line::NormalizeToUTC  = 1;
-        $utc_stub->('NormalizeToUTC');
-    },
-    'DateTimeCreate' => sub {
-        local $Parse::Syslog::Line::DateTimeCreate  = 1;
-        $utc_stub->('Defaults');
-    },
-    'No Date Parsing' => sub {
+my $results_pure = timethese($COUNT, {
+    ISO86001 => make_test_sub('iso'),
+    Legacy   => make_test_sub('legacy'),
+    Mixed    => make_test_sub(),
+    NoDates  => sub {
         local $Parse::Syslog::Line::DateParsing     = 0;
-        $utc_stub->('No Date Parsing');
+        state $stub = make_test_sub();
+        $stub->();
     },
 });
 
@@ -95,3 +90,25 @@ cmpthese($results_pure);
 print "\n";
 
 print "Done.\n";
+
+sub make_test_sub {
+    my ($dataset) = @_;
+    $dataset ||= 'mixed';
+    my $i = 0;
+    my $set = $MESSAGES{$dataset};
+    return sub {
+        $i = 0 if $i >= scalar(@{ $set });
+        my $m = parse_syslog_line($set->[$i]);
+        $i++;
+    }
+}
+
+sub header {
+    my ($header) = @_;
+    chomp($header);
+
+    printf "\n%s\n%s\n",
+        $header,
+        "=" x length($header);
+}
+

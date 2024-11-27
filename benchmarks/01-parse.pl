@@ -22,7 +22,7 @@ foreach my $test ( sort { $a->{string} cmp $b->{string} } values %{ get_test_dat
     push @{ $MESSAGES{mixed} }, $test->{string};
 }
 
-header(sprintf "Data sets loaded, messages in: ISO86001=%d, Legacy=%d, Mixed=%d",
+header(sprintf "Data sets loaded, messages in: ISO8601=%d, Legacy=%d, Mixed=%d",
     scalar( @{ $MESSAGES{iso} } ),
     scalar( @{ $MESSAGES{legacy} } ),
     scalar( @{ $MESSAGES{mixed} } )
@@ -71,13 +71,13 @@ my $results = timethese($COUNT, {
 print "\n";
 cmpthese($results);
 
-header("Compare parse timings of ISO86001 and Legacy formats");
+header("Compare parse timings of ISO8601 and Legacy formats");
 
 my $results_pure = timethese($COUNT, {
-    ISO86001 => make_test_sub('iso'),
-    Legacy   => make_test_sub('legacy'),
-    Mixed    => make_test_sub(),
-    NoDates  => sub {
+    ISO8601 => make_test_sub('iso'),
+    Legacy  => make_test_sub('legacy'),
+    Mixed   => make_test_sub(),
+    NoDates => sub {
         local $Parse::Syslog::Line::DateParsing     = 0;
         state $stub = make_test_sub();
         $stub->();

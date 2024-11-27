@@ -6,6 +6,7 @@ use Dumbbench;
 use Const::Fast;
 use Parse::Syslog::Line;
 
+use FindBin;
 use lib "$FindBin::Bin/../t/lib";
 use test::Data;
 

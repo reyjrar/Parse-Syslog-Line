@@ -1,11 +1,10 @@
----
 expected:
   content: '[1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161'
   date: 2018-01-01
-  date_raw: Jan  1 00:00:00
-  datetime_obj: ~
+  datetime_local: 2018-01-01T00:00:00Z
   datetime_raw: Jan  1 00:00:00
   datetime_str: 2018-01-01T00:00:00Z
+  datetime_utc: 2018-01-01T00:00:00Z
   domain: ~
   epoch: 1514764800
   facility: user
@@ -14,7 +13,7 @@ expected:
   host_raw: mainfw
   message: 'snort[32640]: [1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161'
   message_raw: '<11>Jan  1 00:00:00 mainfw snort[32640]: [1:1893:4] SNMP missing community string attempt [Classification: Misc Attack] [Priority: 2]: {UDP} 1.2.3.4:23210 -> 5.6.7.8:161'
-  offset: Z
+  tz: Z
   preamble: 11
   priority: err
   priority_int: 3

@@ -14,7 +14,6 @@ expected:
   host_raw: webproxy101.example.com
   message: '(squid-1)[58016]: 10.1.2.3 - - [18/Feb/2021:17:07:26 +0000] "CONNECT hcaptcha.com:443 HTTP/1.1" 200 3879 "-" "-" TCP_TUNNEL:HIER_DIRECT'
   message_raw: '2021 Feb 18 17:07:26 webproxy101.example.com (squid-1)[58016]: 10.1.2.3 - - [18/Feb/2021:17:07:26 +0000] "CONNECT hcaptcha.com:443 HTTP/1.1" 200 3879 "-" "-" TCP_TUNNEL:HIER_DIRECT'
-  tz: Z
   preamble: ~
   priority: ~
   priority_int: ~
@@ -23,5 +22,6 @@ expected:
   program_raw: '(squid-1)[58016]'
   program_sub: ~
   time: 17:07:26
+  tz: Z
 name: Squid log parsing
 string: '2021 Feb 18 17:07:26 webproxy101.example.com (squid-1)[58016]: 10.1.2.3 - - [18/Feb/2021:17:07:26 +0000] "CONNECT hcaptcha.com:443 HTTP/1.1" 200 3879 "-" "-" TCP_TUNNEL:HIER_DIRECT'

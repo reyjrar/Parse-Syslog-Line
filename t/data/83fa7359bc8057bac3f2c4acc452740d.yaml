@@ -14,7 +14,6 @@ expected:
   host_raw: example
   message: 'syslogd 1.2.3: restart (remote reception).'
   message_raw: 'Jan  1 00:00:00 example syslogd 1.2.3: restart (remote reception).'
-  tz: Z
   preamble: ~
   priority: ~
   priority_int: ~
@@ -23,5 +22,6 @@ expected:
   program_raw: syslogd 1.2.3
   program_sub: 1.2.3
   time: 00:00:00
+  tz: Z
 name: Syslog reset
 string: 'Jan  1 00:00:00 example syslogd 1.2.3: restart (remote reception).'

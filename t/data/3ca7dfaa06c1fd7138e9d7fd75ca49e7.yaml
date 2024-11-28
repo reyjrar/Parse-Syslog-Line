@@ -14,7 +14,6 @@ expected:
   host_raw: 11.22.33.44
   message: 'dhcpd: DHCPINFORM from 172.16.2.137 via vlan3'
   message_raw: 'Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3'
-  tz: Z
   preamble: ~
   priority: ~
   priority_int: ~
@@ -23,5 +22,6 @@ expected:
   program_raw: dhcpd
   program_sub: ~
   time: 00:00:00
+  tz: Z
 name: 'IP without Hostname, no preamble'
 string: 'Jan  1 00:00:00 11.22.33.44 dhcpd: DHCPINFORM from 172.16.2.137 via vlan3'

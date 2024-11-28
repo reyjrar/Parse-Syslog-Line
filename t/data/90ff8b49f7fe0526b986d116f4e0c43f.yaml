@@ -14,7 +14,6 @@ expected:
   host_raw: hostname
   message: '%ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside'
   message_raw: '<161>Jan 1 18:39:00 hostname : %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside'
-  tz: Z
   preamble: 161
   priority: alert
   priority_int: 1
@@ -23,5 +22,6 @@ expected:
   program_raw: '%ASA-3-313001'
   program_sub: ~
   time: 18:39:00
+  tz: Z
 name: Cisco ASA Alt
 string: '<161>Jan 1 18:39:00 hostname : %ASA-3-313001: Denied ICMP type=5, code=1 from 1.2.3.4 on interface inside'

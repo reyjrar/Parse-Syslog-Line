@@ -2,9 +2,9 @@
 expected:
   content: Interface Ethernet121/1/1 is down(Config change)
   date: 2018-01-01
+  datetime_local: 2018-01-01T09:09:36Z
   datetime_raw: 2018-01-01T11:09:36+02:00
   datetime_str: 2018-01-01T11:09:36+0200
-  datetime_local: 2018-01-01T09:09:36Z
   datetime_utc: 2018-01-01T09:09:36Z
   domain: company.tld
   epoch: 1514797776
@@ -15,7 +15,6 @@ expected:
   message: '%ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)'
   message_raw: '2018-01-01T11:09:36+02:00 hostname.company.tld : 2018 Jan  1 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)'
   ntp: ok
-  tz: +0200
   preamble: ~
   priority: ~
   priority_int: ~
@@ -24,5 +23,6 @@ expected:
   program_raw: '%ETHPORT-5-IF_DOWN_CFG_CHANGE'
   program_sub: ~
   time: 11:09:36
+  tz: +0200
 name: Cisco NX-OS
 string: '2018-01-01T11:09:36+02:00 hostname.company.tld : 2018 Jan  1 11:09:36.290 CET: %ETHPORT-5-IF_DOWN_CFG_CHANGE: Interface Ethernet121/1/1 is down(Config change)'

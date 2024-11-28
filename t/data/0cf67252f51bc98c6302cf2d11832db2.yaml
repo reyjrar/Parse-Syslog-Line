@@ -15,7 +15,6 @@ expected:
   message: '%LINK-3-UPDOWN: Interface BRI0:1, changed state to down'
   message_raw: '<187>Jan 1 14:58:58 fqdn.tld 6951: .Jan 1 14:58:57: %LINK-3-UPDOWN: Interface BRI0:1, changed state to down'
   ntp: out of sync
-  tz: Z
   preamble: 187
   priority: err
   priority_int: 3
@@ -24,5 +23,6 @@ expected:
   program_raw: '%LINK-3-UPDOWN'
   program_sub: ~
   time: 14:58:58
+  tz: Z
 name: Cisco NTP No Sync
 string: '<187>Jan 1 14:58:58 fqdn.tld 6951: .Jan 1 14:58:57: %LINK-3-UPDOWN: Interface BRI0:1, changed state to down'

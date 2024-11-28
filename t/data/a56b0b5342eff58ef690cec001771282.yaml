@@ -19,7 +19,6 @@ expected:
   host_raw: janus
   message: 'foobar[4291]: [context@12345 lvl="2"][origin x="1"] some content [bar x=2 y=2]'
   message_raw: '<163>Jul 26 15:50:14 janus foobar[4291]: [context@12345 lvl="2"][origin x="1"] some content [bar x=2 y=2]'
-  tz: Z
   preamble: 163
   priority: err
   priority_int: 3
@@ -28,6 +27,7 @@ expected:
   program_raw: 'foobar[4291]'
   program_sub: ~
   time: 15:50:14
+  tz: Z
 name: RFC5424 Strict Structured Data
 options:
   RFC5424StructuredDataStrict: 1

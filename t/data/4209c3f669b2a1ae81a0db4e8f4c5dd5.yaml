@@ -14,7 +14,6 @@ expected:
   host_raw: ~
   message: '/usr/sbin/cron[73991]: (root) CMD (/usr/libexec/atrun)'
   message_raw: '<78>Jan  1 08:15:00 /usr/sbin/cron[73991]: (root) CMD (/usr/libexec/atrun)'
-  tz: Z
   preamble: 78
   priority: info
   priority_int: 6
@@ -23,5 +22,6 @@ expected:
   program_raw: '/usr/sbin/cron[73991]'
   program_sub: ~
   time: 08:15:00
+  tz: Z
 name: FreeBSD cron
 string: '<78>Jan  1 08:15:00 /usr/sbin/cron[73991]: (root) CMD (/usr/libexec/atrun)'

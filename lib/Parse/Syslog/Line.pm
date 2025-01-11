@@ -961,7 +961,7 @@ sub parse_syslog_line {
             $msg{_json_error} = sprintf "Failed to decode json: %s", $err;
         };
     }
-    elsif( $AutoDetectKeyValues && $msg{content} =~ /(?:^|\s)[a-zA-Z\.0-9\-_]+=\S+/ ) {
+    if( !$msg{SDATA} && $AutoDetectKeyValues && $msg{content} =~ /(?:^|\s)[a-zA-Z\.0-9\-_]+=\S+/ ) {
         my %sdata = ();
         while( $msg{content} =~ /$RE{kvdata}/og ) {
             my ($k,$v) = ($1,$2);

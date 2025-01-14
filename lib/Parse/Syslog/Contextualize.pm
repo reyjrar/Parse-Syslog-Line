@@ -144,8 +144,10 @@ sub parse {
         _tags => { syslog => 1 },
     );
 
+    use DDP;
     foreach my $p ( @{ $self->plugins } ) {
         $p->process($res,\%doc);
+        p($res, as => 'after_' . $p->name);
     }
 
     my %rel = ();
@@ -165,6 +167,8 @@ sub parse {
         $doc{tags} = [ sort keys %{ $tags } ];
     }
 
+    p(%doc);
+    exit;
     return \%doc;
 }
 

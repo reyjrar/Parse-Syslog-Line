@@ -1,4 +1,4 @@
-package Parse::Syslog::Context::URL
+package Parse::Syslog::Context::URL;
 # ABSTRACT: Inspects URL's for common attack patterns
 
 use JSON::MaybeXS;
@@ -87,10 +87,9 @@ sub sample_messages {
     return @msgs;
 }
 
-=method contextualize_message
+=method process
 
-Takes an L<eris::log> instance, parses the fields 'resource' and 'referer' for
-attack patterns.
+Parses the fields 'resource' and 'referer' for attack patterns.
 
 Provides 3 top level keys to the context:
 
@@ -116,7 +115,7 @@ Tags messages with 'security' if an attack string is detected.
 
 =cut
 
-sub contextualize_message {
+sub process {
     my ($self,$log,$ctx) = @_;
 
     my %add    = ();
@@ -125,7 +124,7 @@ sub contextualize_message {
     my %tags   = ();
 
     foreach my $f ( keys %{ $ctx } ) {
-        next unless $f =~ /(?:_ur[li]$)|(?:^resource$)/o;
+        next unless $f =~ /(?:_ur[li])|(?:^resource)$/o;
 
         # Normalize (Lower casing, Unescaping)
         my $url = lc $ctx->{$f} =~ s/%([0-9a-f]{2})/chr(hex($1))/reg;

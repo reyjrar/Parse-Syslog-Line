@@ -136,8 +136,8 @@ sub parse {
         message   => $msg,
         src_host  => $res->{host},
         provider  => $res->{program_name},
-        severity  => $res->{priority},
         # Optional Elements
+        $res->{severity}    ? ( severity  => $res->{priority} ) : (),
         $res->{domain}      ? ( src_domain => $res->{domain} ) : (),
         $res->{program_pid} ? ( pid => $res->{program_pid} ) : (),
         $res->{program_sub} ? ( component => $res->{program_sub} ) : (),
@@ -148,13 +148,17 @@ sub parse {
         $p->process($res,\%doc);
     }
 
+    my %rel = ();
     foreach my $k ( keys %doc ) {
         if ( $k =~ /_ip$/ ) {
-            push @{ $doc{related}{ip} }, $doc{$k};
+            $rel{ip}->{$doc{$k}} = 1;
         }
         elsif ( $k =~ /user$/ ) {
-            push @{ $doc{related}{user} }, $doc{$k};
+            $rel{user}->{$doc{$k}} = 1;
         }
+    }
+    foreach my $section ( keys %rel ) {
+        $doc{related}{$section} = [ keys %{ $rel{$section} } ];
     }
 
     if ( my $tags = delete $doc{_tags} ) {

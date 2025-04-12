@@ -18,7 +18,7 @@ use Ref::Util           qw( is_arrayref );
 use Time::Moment;
 # RECOMMEND PREREQ: Cpanel::JSON::XS
 
-our $VERSION = '6.1';
+our $VERSION = '6.2';
 
 # Default for Handling Parsing
 our $DateParsing     = 1;

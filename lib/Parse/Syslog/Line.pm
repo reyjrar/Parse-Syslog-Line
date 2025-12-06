@@ -705,7 +705,6 @@ sub parse_syslog_line {
     my ($raw_string) = @_;
 
     # State Variables
-    state $DateTimeTried = 0;
     state $CpanelJSONXSWarning = 0;
     state $DisableWarnings = $ENV{PARSE_SYSLOG_LINE_QUIET} || $ENV{TEST_ACTIVE} || $ENV{TEST2_ACTIVE};
 
